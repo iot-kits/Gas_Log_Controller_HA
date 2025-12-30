@@ -1,3 +1,7 @@
+//! Main application file for Smart Thermostat
+//! moved to github 2025.12.30
+
+
 #include <Arduino.h>        // for Arduino core
 #include "ArduinoOTA.h"     // for ArduinoOTA.handle() in loop()
 #include "configuration.h"  // for credentials, hardware connections, and control parameters

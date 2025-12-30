@@ -1,0 +1,122 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "USB - Build and Upload",
+			"type": "shell",
+			"command": "C:\\Users\\KarlB\\.platformio\\penv\\Scripts\\platformio.exe",
+			"args": [
+				"run",
+				"--target",
+				"upload",
+				"--environment",
+				"usb"
+			],
+			"group": "build"
+		},
+		{
+			"label": "USB - Upload Filesystem",
+			"type": "shell",
+			"command": "C:\\Users\\KarlB\\.platformio\\penv\\Scripts\\platformio.exe",
+			"args": [
+				"run",
+				"--target",
+				"uploadfs",
+				"--environment",
+				"usb"
+			],
+			"group": "build"
+		},
+		{
+			"label": "WiFi OTA - Build and Upload",
+			"type": "shell",
+			"command": "C:\\Users\\KarlB\\.platformio\\penv\\Scripts\\platformio.exe",
+			"args": [
+				"run",
+				"--target",
+				"upload",
+				"--environment",
+				"ota"
+			],
+			"group": "build"
+		},
+		{
+			"label": "WiFi OTA - Upload Filesystem",
+			"type": "shell",
+			"command": "C:\\Users\\KarlB\\.platformio\\penv\\Scripts\\platformio.exe",
+			"args": [
+				"run",
+				"--target",
+				"uploadfs",
+				"--environment",
+				"ota"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Build and Upload Fix",
+			"type": "shell",
+			"command": "C:\\Users\\KarlB\\.platformio\\penv\\Scripts\\platformio.exe",
+			"args": [
+				"run",
+				"--target",
+				"upload",
+				"--environment",
+				"ota"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Upload Filesystem with Fix",
+			"type": "shell",
+			"command": "C:\\Users\\KarlB\\.platformio\\penv\\Scripts\\platformio.exe",
+			"args": [
+				"run",
+				"--target",
+				"uploadfs",
+				"--environment",
+				"ota"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Upload Updated Filesystem",
+			"type": "shell",
+			"command": "C:\\Users\\KarlB\\.platformio\\penv\\Scripts\\platformio.exe",
+			"args": [
+				"run",
+				"--target",
+				"uploadfs",
+				"--environment",
+				"ota"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Upload Updated Firmware",
+			"type": "shell",
+			"command": "C:\\Users\\KarlB\\.platformio\\penv\\Scripts\\platformio.exe",
+			"args": [
+				"run",
+				"--target",
+				"upload",
+				"--environment",
+				"ota"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Upload Compact Layout",
+			"type": "shell",
+			"command": "C:\\Users\\KarlB\\.platformio\\penv\\Scripts\\platformio.exe",
+			"args": [
+				"run",
+				"--target",
+				"uploadfs",
+				"--environment",
+				"ota"
+			],
+			"group": "build"
+		}
+	]
+}

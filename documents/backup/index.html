@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gas Log Control</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Gas Log Control</h1>
+
+    <div class="panel buff">
+             <div class="label">Temperature Setting</div>
+      <div class="setpoint-display">
+        <span id="setpoint-value">70°F</span>
+      </div>
+      <input type="range" id="temp-slider" min="60" max="74" step="1" />
+      <div class="slider-markers">
+        <span>60</span><span>62</span><span>64</span><span>66</span><span>68</span><span>70</span><span>72</span><span>74</span>
+      </div>
+    </div>
+
+    <div class="panel buff">
+      <div class="label">Room Temperature & Humidity</div>
+      <div class="room-temp-display">
+        <span id="room-temp">72°F</span><span id="room-humidity">60%</span>
+      </div>
+    </div>
+
+    <div class="panel buff">
+      <div class="label">Control</div>
+      <div class="control-row">
+        <div class="control-group">
+          <div class="control-label">Power</div>
+          <div class="button-group" id="power-group">
+            <button class="toggle-button" data-value="on">ON</button>
+            <button class="toggle-button active" data-value="off">OFF</button>
+          </div>
+        </div>
+        <div class="control-group">
+          <div class="control-label">Mode</div>
+          <div class="button-group" id="mode-group">
+            <button class="toggle-button active" data-value="automatic">AUTO</button>
+            <button class="toggle-button" data-value="manual">MANUAL</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel buff">
+      <div class="label">Status</div>
+      <div class="status-display" id="status-message">System Normal</div>
+    </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

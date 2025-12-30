@@ -1,0 +1,117 @@
+/* Constrain overall layout */
+body {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding: 1rem;
+}
+
+.container {
+  max-width: 400px; /* Adjust as needed for compactness */
+  width: 100%;
+}
+
+.title {
+  text-align: center;
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.panel {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  margin-bottom: 1rem;
+  padding: 1rem;
+}
+
+.temp-display {
+  font-size: 2rem;
+  text-align: center;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
+}
+
+/* Temperature display color states */
+.temp-display.temp-heating {
+  background-color: #dc3545; /* Red */
+  color: white;
+}
+
+.temp-display.temp-idle {
+  background-color: #007bff; /* Blue */
+  color: white;
+}
+
+.temp-display.temp-off {
+  background-color: #bbb; /* Light neutral gray */
+  color: white;
+}
+
+.slider-container {
+  text-align: center;
+}
+
+.slider-markers {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9em;
+  margin-top: 5px;
+}
+
+input[type="range"] {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.control-panel .subpanel {
+  margin-bottom: 1rem;
+}
+
+.button-group {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 0.5rem;
+}
+
+.toggle-button {
+  flex: 1;
+  margin: 0 0.25rem;
+  padding: 0.75rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 6px;
+  background: #ddd;
+  cursor: pointer;
+}
+
+.toggle-button.active {
+  background: #007bff;
+  color: white;
+}
+
+.status-display {
+  display: block;
+  text-align: center;
+  font-weight: bold;
+  padding: 0.5rem;
+  border-radius: 6px;
+}
+
+.status-display.normal {
+  color: green;
+}
+
+.status-display.warning {
+  color: orange;
+}
+
+.status-display.error {
+  color: red;
+}
+

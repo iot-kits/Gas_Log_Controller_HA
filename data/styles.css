@@ -8,6 +8,14 @@ body {
   padding: 1rem;
 }
 
+/* Root-level variables (your new unified color system) */
+:root {
+  --temp-heating-bg: var(--roomTemperatureBackgroundColorHeating);
+  --temp-idle-bg: var(--roomTemperatureBackgroundColorIdle);
+  --temp-off-bg: var(--roomTemperatureBackgroundColorOff);
+  --temp-text-color: white;
+}
+
 .container {
   max-width: 400px; /* Adjust as needed for compactness */
   width: 100%;
@@ -37,21 +45,24 @@ body {
   transition: background-color 0.3s ease;
 }
 
-/* Temperature display color states */
+/* Heating */
 .temp-display.temp-heating {
-  background-color: #dc3545; /* Red */
-  color: white;
+  background-color: var(--temp-heating-bg);
+  color: var(--temp-text-color);
 }
 
+/* Idle */
 .temp-display.temp-idle {
-  background-color: #007bff; /* Blue */
-  color: white;
+  background-color: var(--temp-idle-bg);
+  color: var(--temp-text-color);
 }
 
+/* Off */
 .temp-display.temp-off {
-  background-color: #bbb; /* Light neutral gray */
-  color: white;
+  background-color: var(--temp-off-bg);
+  color: var(--temp-text-color);
 }
+
 
 .slider-container {
   text-align: center;

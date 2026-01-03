@@ -75,13 +75,13 @@ void loop()
     if (controlState.powerOn) // Manual mode with power ON
     {
       valveOpenRequest(true);
-      updateSliderState("HEATING");
+      setRoomTempColor("HEATING");
       updateWebStatus("Manual Mode: Heating");
     }
     else // Manual mode with power OFF
     {
       valveOpenRequest(false);
-      updateSliderState("OFF");
+      setRoomTempColor("OFF");
       updateWebStatus("Manual Mode: Off");
     }
     return; // exit loop after handling MANUAL mode
@@ -99,13 +99,13 @@ void loop()
       Serial.println("Automatic mode active.");
       if (thermostatHeatCall(tempF, controlState.setpointF))
       {
-        updateSliderState("HEATING");
+        setRoomTempColor("HEATING");
         updateWebStatus("Thermostat: Heating");
         valveOpenRequest(true);
       }
       else
       {
-        updateSliderState("IDLE");
+        setRoomTempColor("IDLE");
         updateWebStatus("Thermostat: Idle");
         valveOpenRequest(false);
       }

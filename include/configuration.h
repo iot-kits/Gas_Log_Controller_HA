@@ -1,39 +1,44 @@
 /**
  * @file configuration.h
- * @brief Configuration header file for Gas Log Controller
+ * @version 2026.01.03
+ * @author Karl Berger & OpenAI ChatGPT
+ * @brief Configuration header file for Gas Log Controller ESP32-C3 project
  *
- * This file contains all the configuration settings for the Gas Log Controller
- * running on an ESP32-C3 SuperMini board. It includes WiFi credentials, network
- * settings, GPIO pin assignments, and various operational parameters.
+ * This header file contains all the configuration constants and settings for the Gas Log Controller
+ * system running on ESP32-C3 SuperMini. It includes WiFi credentials, network settings, OTA
+ * configuration, GPIO pin assignments, and various operational parameters.
  *
- * @note All constants are defined as inline to allow inclusion in multiple
- *       translation units without violating the One Definition Rule (ODR).
+ * @section wifi_config WiFi Configuration
+ * - WIFI_SSID: Network name for WiFi connection
+ * - WIFI_PASSWORD: WiFi network password
  *
- * @section wifi WiFi Configuration
- * - WIFI_SSID: Network SSID for WiFi connection
- * - WIFI_PASSWORD: Network password for WiFi authentication
+ * @section network_config Network Configuration
+ * - LOCAL_IP: Static IP address assignment (192.168.0.50)
+ * - GATEWAY: Default gateway IP address
+ * - SUBNET: Subnet mask for the network
  *
- * @section network Network Configuration
- * - LOCAL_IP: Static IP address (192.168.0.50)
- * - GATEWAY: Network gateway address (192.168.0.1)
- * - SUBNET: Subnet mask (255.255.255.0)
+ * @section ota_config Over-The-Air Update Configuration
+ * - OTA_HOSTNAME: Device hostname for OTA identification
+ * - OTA_PASSWORD: Security password for OTA updates
  *
- * @section gpio GPIO Pin Assignments
- * - LED_PIN (GPIO 8): Built-in LED indicator
- * - DS18b20_PIN (GPIO 6): Temperature sensor data line
- * - SDA_PIN (GPIO 3): I2C data line
- * - SCL_PIN (GPIO 2): I2C clock line
- * - HBRIDGE_IN1_PIN (GPIO 1): H-Bridge control input 1
- * - HBRIDGE_IN2_PIN (GPIO 0): H-Bridge control input 2
- * - MIC_PIN (GPIO 10): Analog microphone input
+ * @section gpio_config GPIO Pin Assignments
+ * - LED_PIN: Built-in LED control pin (GPIO 8)
+ * - ONE_WIRE_BUS: Dallas DS18B20 temperature sensor data pin (GPIO 6)
+ * - SDA_PIN/SCL_PIN: I2C communication pins (GPIO 3/2)
+ * - HBRIDGE_IN1_PIN/HBRIDGE_IN2_PIN: H-Bridge motor control pins (GPIO 1/0)
+ * - MIC_PIN: Microphone analog input pin (GPIO 10) - currently unused
  *
- * @section timing Timing Configuration
- * - STATUS_CHECK_INTERVAL: System status check interval (10000ms)
- * - SENSOR_UPDATE_INTERVAL: Sensor reading update interval (5000ms)
+ * @section timing_config Timing and Operational Settings
+ * - STATUS_CHECK_INTERVAL: Frequency of system status checks (5 seconds)
+ * - SENSOR_UPDATE_INTERVAL: Frequency of sensor reading updates (5 seconds)
+ * - METRIC_UNITS: Unit system flag (false = Imperial, true = Metric)
+ * - TEMP_RESOLUTION: DS18B20 sensor precision (11-bit resolution)
+ * - timeToOpenValve/timeToCloseValve: Valve operation timing (7 seconds each)
+ * - THERMOSTAT_HYSTERESIS: Temperature control deadband (0.2°F)
  *
- * @section sensor Sensor Configuration
- * - METRIC_UNITS: Temperature unit selection (false = imperial, true = metric)
- * - TEMP_RESOLUTION: DS18B20 sensor resolution in bits (9-12)
+ * @note This configuration is specifically designed for ESP32-C3 SuperMini hardware
+ * @note IP address is set within DHCP reservation range (.100-.249)
+ * @warning Ensure WiFi credentials are properly secured in production environments
  */
 #ifndef CONFIGURATION_H
 #define CONFIGURATION_H
@@ -61,14 +66,16 @@ static const int SDA_PIN = 3;		  // I2C SDA pin
 static const int SCL_PIN = 2;		  // I2C SCL pin
 static const int HBRIDGE_IN1_PIN = 1; // H-Bridge IN1 pin
 static const int HBRIDGE_IN2_PIN = 0; // H-Bridge IN2 pin
-static const int MIC_PIN = 10;		  // Microphone analog input pin
+static const int MIC_PIN = 10;		  // Microphone analog input pin - not used
+//! Define to enable DS18B20 temperature sensor support or disable for alternative sensor
+#define DS18B20						  // Define to enable DS18B20 temperature sensor support
 
 // Update intervals & settings
-static unsigned long STATUS_CHECK_INTERVAL = 5000;		  // Check status every 10 seconds
-static const unsigned long SENSOR_UPDATE_INTERVAL = 5000; // Update sensor readings every 5 seconds
+static unsigned long STATUS_CHECK_INTERVAL = 5000;		  // Check status periodically
+static const unsigned long SENSOR_UPDATE_INTERVAL = 5000; // Update sensor readings periocally
 static bool METRIC_UNITS = false;						  // Set to true for metric units, false for imperial
 static const int TEMP_RESOLUTION = 11;					  // DS18b20 temperature sensor resolution (9-12 bits)
 static unsigned long timeToOpenValve = 7000;			  // Time to fully open valve in milliseconds
 static unsigned long timeToCloseValve = 7000;			  // Time to fully close valve in milliseconds
-static const float THERMOSTAT_HYSTERESIS = 0.2;			  // Thermostat hysteresis in Fahrenheit
+static const float THERMOSTAT_HYSTERESIS = 0.2;			  // Thermostat hysteresis in Fahrenheit degrees
 #endif													  // CONFIGURATION_H

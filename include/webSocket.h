@@ -75,5 +75,5 @@ void websocketCleanup();													  //! Periodically clean up disconnected cl
 void updateWebStatus(const String &statusMessage);							  //! Update system status and notify clients
 String formatControlState();
 void broadcastControlState();
-
+void setRoomTempColor(const char* newState);						  //! Update room temperature background color
 #endif // WEBSOCKET_H

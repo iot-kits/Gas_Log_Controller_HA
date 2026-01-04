@@ -10,6 +10,18 @@ body {
 
 /* Root-level variables (your new unified color system) */
 :root {
+  --temp-heating-bg: var(--roomTemperatureBackgroundColorHeating, #b71c1c);
+  --temp-idle-bg: var(--roomTemperatureBackgroundColorIdle, #1565c0);
+  --temp-off-bg: var(--roomTemperatureBackgroundColorOff, #424242);
+  --roomTemperatureBackgroundColorOff: #7f8c8d;     /* neutral gray for off */
+
+  /* Derived variables used by components */
+  --temp-heating-bg: #e74c3c;  /* heating: warm red */
+  --temp-idle-bg: #f1c40f;     /* idle: amber/yellow */
+  --temp-off-bg: #95a5a6;      /* off: muted gray */
+  --roomTemperatureBackgroundColorOff: #6c757d;
+
+  /* Aliases used throughout the UI */
   --temp-heating-bg: var(--roomTemperatureBackgroundColorHeating);
   --temp-idle-bg: var(--roomTemperatureBackgroundColorIdle);
   --temp-off-bg: var(--roomTemperatureBackgroundColorOff);
@@ -62,7 +74,6 @@ body {
   background-color: var(--temp-off-bg);
   color: var(--temp-text-color);
 }
-
 
 .slider-container {
   text-align: center;

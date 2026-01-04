@@ -1,96 +1,3 @@
-
-/**
- * @fileoverview WebSocket client for Gas Log Controller, handling real-time communication
- * between the web interface and the ESP32-C3 controller.
- * 
- * This script manages:
- * - WebSocket connection lifecycle (connect, reconnect, error handling)
- * - Bidirectional message passing (status, temperature, state updates)
- * - UI synchronization (toggle buttons, temperature slider)
- * - Command transmission to the Arduino/ESP32 controller
- * 
- * @author Karl Berger
- * @version 2025-12-29
- * @requires WebSocket API
- */
-
-/**
- * WebSocket connection instance for real-time communication with the server.
- * @type {WebSocket|undefined}
- */
-
-/**
- * Initializes and manages the WebSocket connection to the server.
- * Automatically reconnects after 5 seconds if the connection is lost.
- * Prevents multiple simultaneous connections.
- * 
- * @function initWebSocket
- * @returns {void}
- */
-
-/**
- * Processes incoming WebSocket messages and updates the UI accordingly.
- * Handles three message types:
- * - status: System status messages
- * - temperature: Current room temperature updates
- * - state: Full controller state synchronization (power, mode, setpoint)
- * 
- * @function processWebSocketMessage
- * @param {string} message - JSON-formatted message from the server
- * @returns {void}
- */
-
-/**
- * Updates the active state of toggle buttons within a button group.
- * 
- * @function updateToggleGroup
- * @param {string} groupId - The ID of the toggle button group container
- * @param {string} value - The value to match against button data-value attributes
- * @returns {void}
- */
-
-/**
- * Updates the status message display element with styling based on message content.
- * Applies CSS classes for error, warning, or normal status states.
- * 
- * @function updateStatusDisplay
- * @param {string} statusMessage - The status message to display
- * @returns {void}
- */
-
-/**
- * Updates the room temperature display element.
- * 
- * @function updateTemperatureDisplay
- * @param {number} temperature - The temperature value in Fahrenheit
- * @returns {void}
- */
-
-/**
- * Sends a command string to the Arduino/ESP32 controller via WebSocket.
- * Validates WebSocket connection state before sending.
- * 
- * @function sendCommand
- * @param {string} command - JSON-formatted command string
- * @returns {void}
- */
-
-/**
- * Sets up event listeners for a toggle button group.
- * Handles button clicks and sends corresponding commands to the controller.
- * 
- * @function setupToggleGroup
- * @param {string} groupId - The ID of the toggle button group container
- * @returns {void}
- */
-
-/**
- * Sends the current temperature setpoint value to the controller.
- * Reads value from the temperature slider element.
- * 
- * @function sendSetpoint
- * @returns {void}
- */
 // WebSocket connection
 let socket;
 
@@ -156,10 +63,6 @@ function processWebSocketMessage(message) {
           setpointDisplay.textContent = `${data.setpoint}°F`;
         }
       }
-      // Handle room temp background state
-if (data.valveState) {
-    setRoomTempBackground(data.valveState);
-}
     }
   } catch (error) {
     console.error("Error parsing WebSocket message:", error);
@@ -171,7 +74,7 @@ function updateToggleGroup(groupId, value) {
   if (!group) return;
 
   const buttons = group.querySelectorAll(".toggle-button");
-  buttons.forEach(btn => {
+  buttons.forEach((btn) => {
     if (btn.dataset.value.toUpperCase() === value.toUpperCase()) {
       btn.classList.add("active");
     } else {
@@ -182,19 +85,23 @@ function updateToggleGroup(groupId, value) {
 
 // Function to update status display
 function updateStatusDisplay(statusMessage) {
-  const statusElement = document.getElementById('status-message');
+  const statusElement = document.getElementById("status-message");
   if (statusElement) {
     statusElement.textContent = statusMessage;
 
     // Add status-specific styling
-    statusElement.className = 'status-display';
+    statusElement.className = "status-display";
 
-    if (statusMessage.includes('Error') || statusMessage.includes('Alert')) {
-      statusElement.classList.add('error');
-    } else if (statusMessage.includes('Warning')) {
-      statusElement.classList.add('warning');
-    } else if (statusMessage.includes('Normal') || statusMessage.includes('Heating') || statusMessage.includes('Idle')) {
-      statusElement.classList.add('normal');
+    if (statusMessage.includes("Error") || statusMessage.includes("Alert")) {
+      statusElement.classList.add("error");
+    } else if (statusMessage.includes("Warning")) {
+      statusElement.classList.add("warning");
+    } else if (
+      statusMessage.includes("Normal") ||
+      statusMessage.includes("Heating") ||
+      statusMessage.includes("Idle")
+    ) {
+      statusElement.classList.add("normal");
     }
   } else {
     console.error("Status element not found!");
@@ -203,7 +110,7 @@ function updateStatusDisplay(statusMessage) {
 
 // Function to update temperature display
 function updateTemperatureDisplay(temperature) {
-  const tempElement = document.getElementById('room-temp');
+  const tempElement = document.getElementById("room-temp");
   if (tempElement) {
     tempElement.textContent = `${temperature.toFixed(1)}°F`;
   }
@@ -211,25 +118,25 @@ function updateTemperatureDisplay(temperature) {
 
 // Function to update room temperature background color based on state
 function setRoomTempBackground(state) {
-  const tempElement = document.querySelector('.temp-display');
+  const tempElement = document.querySelector(".temp-display");
   if (!tempElement) return;
 
   // Remove existing color classes
-  tempElement.classList.remove('temp-heating', 'temp-idle', 'temp-off');
+  tempElement.classList.remove("temp-heating", "temp-idle", "temp-off");
 
   // Add appropriate class based on state
   switch (state.toUpperCase()) {
-    case 'HEATING':
-      tempElement.classList.add('temp-heating');
+    case "HEATING":
+      tempElement.classList.add("temp-heating");
       break;
-    case 'IDLE':
-      tempElement.classList.add('temp-idle');
+    case "IDLE":
+      tempElement.classList.add("temp-idle");
       break;
-    case 'OFF':
-      tempElement.classList.add('temp-off');
+    case "OFF":
+      tempElement.classList.add("temp-off");
       break;
     default:
-      tempElement.classList.add('temp-off');
+      tempElement.classList.add("temp-off");
   }
 }
 
@@ -240,7 +147,10 @@ function sendCommand(command) {
   if (socket && socket.readyState === WebSocket.OPEN) {
     socket.send(command);
   } else {
-    console.error("WebSocket not ready. State:", socket ? socket.readyState : "null");
+    console.error(
+      "WebSocket not ready. State:",
+      socket ? socket.readyState : "null"
+    );
   }
 }
 
@@ -251,9 +161,9 @@ function setupToggleGroup(groupId) {
 
   const buttons = group.querySelectorAll(".toggle-button");
 
-  buttons.forEach(button => {
+  buttons.forEach((button) => {
     button.addEventListener("click", () => {
-      buttons.forEach(btn => btn.classList.remove("active"));
+      buttons.forEach((btn) => btn.classList.remove("active"));
       button.classList.add("active");
 
       // Determine message type based on group
@@ -261,7 +171,7 @@ function setupToggleGroup(groupId) {
 
       const message = JSON.stringify({
         type: messageType,
-        value: button.dataset.value
+        value: button.dataset.value,
       });
       sendCommand(message);
     });
@@ -284,7 +194,7 @@ function sendSetpoint() {
   const value = parseInt(slider.value);
   const message = JSON.stringify({
     type: "setpoint",
-    value: value
+    value: value,
   });
   sendCommand(message);
 }
@@ -296,7 +206,7 @@ slider.addEventListener("touchend", sendSetpoint);
 setupToggleGroup("power-group");
 setupToggleGroup("mode-group");
 
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener("DOMContentLoaded", function () {
   initWebSocket();
 
   setupToggleGroup("power-group");
@@ -305,6 +215,4 @@ document.addEventListener('DOMContentLoaded', function () {
   // Set initial state to OFF and AUTOMATIC
   sendCommand(JSON.stringify({ type: "power", value: "OFF" }));
   sendCommand(JSON.stringify({ type: "mode", value: "AUTOMATIC" }));
-
 });
-

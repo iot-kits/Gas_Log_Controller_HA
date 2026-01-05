@@ -50,30 +50,30 @@
 #ifndef WEBSOCKET_H
 #define WEBSOCKET_H
 
-#include <Arduino.h>
+#include <Arduino.h>           // Core Arduino library
 #include <ESPAsyncWebServer.h> // https://github.com/ESP32Async/ESPAsyncWebServer
 
-extern AsyncWebServer server;
-extern AsyncWebSocket ws;
+extern AsyncWebServer server;    // Global web server instance
+extern AsyncWebSocket ws;        // Global WebSocket server instance
 extern String lastStatusMessage; // Access to current status from main.cpp
 
-struct ControlState {
-    bool powerOn;
-    bool autoMode;
-    int setpointF;
-    const char* valveState; // "HEATING", "IDLE", or "OFF"
+struct ControlState
+{
+    bool powerOn;           // true = ON, false = OFF
+    bool autoMode;          // true = AUTOMATIC, false = MANUAL
+    int setpointF;          // Temperature setpoint in Fahrenheit
+    const char *valveState; // "HEATING", "IDLE", or "OFF"
 };
 
 extern ControlState controlState;
 
 //! Web Socket event handler
 void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
-void notifyAllClients(const String &message);								  //! Notify all connected clients with a message
+void broadcastControlState();                                                 //! Send current control state to all connected WebSocket clients
+void notifyAllClients(const String &message);                                 //! Notify all connected clients with a message
 void notifySingleClient(AsyncWebSocketClient *client, const String &message); //! Notify a specific client by client pointer
-void websocketBegin();														  //! Initialize WebSocket and serve UI files
-void websocketCleanup();													  //! Periodically clean up disconnected clients
-void updateWebStatus(const String &statusMessage);							  //! Update system status and notify clients
-String formatControlState();
-void broadcastControlState();
-void setRoomTempColor(const char* newState);						  //! Update room temperature background color
-#endif // WEBSOCKET_H
+void setRoomTempColor(const char *newState);                                  //! Update room temperature background color
+void updateWebStatus(const String &statusMessage);                            //! Update system status and notify clients
+void websocketBegin();                                                        //! Initialize WebSocket and serve UI files
+void websocketCleanup();                                                      //! Periodically clean up disconnected clients
+#endif                                                                        // WEBSOCKET_H

@@ -1,6 +1,8 @@
 /**
  * @file aht10_sensor.cpp
  * @brief AHT10 temperature and humidity sensor interface implementation
+ * @author Karl Berger & Copilot
+ * @date 2025-12-13
  * 
  * This file provides the implementation for interfacing with the AHT10 temperature
  * and humidity sensor using the Adafruit AHTX0 library. The implementation is
@@ -20,7 +22,6 @@
  * - webSocket module for status updates
  */
 
-//! DS18B20 is defined in platformio.ini build_flags if DS18B20 is selected
 #ifndef DS18B20 //! if not DS18B20 then AHT10
 
 #include "aht10_sensor.h"	 // own header

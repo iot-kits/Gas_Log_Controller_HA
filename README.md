@@ -16,6 +16,10 @@ The power buttons turn the controller on and off. The gas valve is closed (no he
 | **ON**       | Thermostat | Heating    |
 | **OFF**      | System OFF | System OFF |
 
+## Schematic
+
+
+
 
 ## Planned Enhancements
 

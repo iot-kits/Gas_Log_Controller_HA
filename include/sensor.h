@@ -1,7 +1,7 @@
 /**
  * @file sensor.h
  * @brief Temperature and humidity sensor interface
- * @version 2026.01.03
+ * @version 2026.01.05
  * @author Karl Berger & OpenAI ChatGPT
  *
  * This header file provides a unified interface for temperature and humidity sensors.
@@ -25,13 +25,15 @@
  * This function performs the necessary initialization of the sensor hardware
  * and communication interfaces. Must be called before attempting to read
  * sensor values.
+ * 
+ * @return bool True if sensor initialized successfully, false otherwise
  */
-void initSensor();
+bool initSensor();
 
 /**
  * @brief Read the current temperature from the sensor
  *
- * @return float The temperature value in degrees Celsius
+ * @return float The temperature value in degrees Celsius, or NAN if sensor read fails
  */
 float readTemperature();
 

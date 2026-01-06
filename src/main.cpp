@@ -17,6 +17,7 @@ String lastStatusMessage = ""; // Made available to webSocket.cpp
 String lastSliderState = "";   // Track slider state changes
 unsigned long lastStatusCheck = 0;
 unsigned long lastTempSensorUpdate = 0;
+bool tempSensorAvailable = false; // Track if sensor initialized successfully
 
 void setup()
 {
@@ -28,7 +29,12 @@ void setup()
   otaBegin();                   // Initialize Over-The-Air update service
   websocketBegin();             // Initialize webSocket for bi-directional communication with web UI
   valveDriverBegin();           // Initialize valve driver pins and state
-  initSensor();                 // Initialize temperature sensor
+  tempSensorAvailable = initSensor(); // Initialize temperature sensor and check if successful
+  
+  if (!tempSensorAvailable) {
+    Serial.println("WARNING: Temperature sensor not available - system will run without temperature feedback");
+    updateWebStatus("Warning: No temperature sensor detected");
+  }
 }
 
 void loop()
@@ -41,26 +47,31 @@ void loop()
   // Non-blocking periodic sensor update
   if (millis() - lastTempSensorUpdate > SENSOR_UPDATE_INTERVAL)
   {
-    // If sensor failed to initialize, skip
-    // if (!tempSensorInitSuccess)
-    //   return;
-
-    float tempC = readTemperature();
-    float humidity = readHumidity();
-
-    if (!isnan(tempC))
+    // Only try to read sensor if initialization was successful
+    if (tempSensorAvailable)
     {
-      tempF = tempC * 9.0 / 5.0 + 32.0; // Convert Celcius to Fahrenheit
-      Serial.printf("Room Temp: %.1f °F\n", tempF);
-      char buffer[64];
-      snprintf(buffer, sizeof(buffer), "{\"type\":\"temperature\",\"value\":%.1f}", tempF);
-      String tempMessage = String(buffer);
-      notifyAllClients(tempMessage);
+      float tempC = readTemperature();
+      float humidity = readHumidity();
+
+      if (!isnan(tempC))
+      {
+        tempF = tempC * 9.0 / 5.0 + 32.0; // Convert Celsius to Fahrenheit
+        Serial.printf("Room Temp: %.1f °F\n", tempF);
+        char buffer[64];
+        snprintf(buffer, sizeof(buffer), "{\"type\":\"temperature\",\"value\":%.1f}", tempF);
+        String tempMessage = String(buffer);
+        notifyAllClients(tempMessage);
+      }
+      else
+      {
+        Serial.println("Error: Temperature sensor read failed");
+        updateWebStatus("Error: Temperature sensor read failed");
+      }
     }
     else
     {
-      Serial.println("Error: Temperature sensor read failed");
-      updateWebStatus("Error: Temperature sensor read failed");
+      // Sensor not available, send a placeholder or error value
+      Serial.println("Warning: Temperature sensor not available");
     }
 
     lastTempSensorUpdate = millis(); // update timestamp

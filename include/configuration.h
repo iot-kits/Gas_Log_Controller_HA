@@ -68,7 +68,7 @@ static const int HBRIDGE_IN1_PIN = 1; // H-Bridge IN1 pin
 static const int HBRIDGE_IN2_PIN = 0; // H-Bridge IN2 pin
 static const int MIC_PIN = 10;		  // Microphone analog input pin - not used
 //! Define to enable DS18B20 temperature sensor support or disable for alternative sensor
-#define DS18B20						  // Define to enable DS18B20 temperature sensor support
+// #define DS18B20						  // Define to enable DS18B20 temperature sensor support
 
 // Update intervals & settings
 static unsigned long STATUS_CHECK_INTERVAL = 5000;		  // Check status periodically

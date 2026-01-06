@@ -1,6 +1,6 @@
 /**
  * @file ds18b20_sensor.cpp
- * @version 2026.01.03
+ * @version 2026.01.05
  * @author Karl Berger & OpenAI ChatGPT
  * @brief DS18B20 temperature sensor interface implementation
  * 
@@ -32,27 +32,38 @@ static bool tempSensorInitSuccess = false;
  * - Sets global flags and status messages based on initialization success/failure
  * - Configures sensor resolution if initialization is successful
  * 
- * @note Sets tempSensorInitSuccess global flag to indicate initialization status
+ * @return bool True if sensor initialized successfully, false otherwise
  * @note Updates web status with appropriate messages during initialization
  * @note Uses TEMP_RESOLUTION constant for sensor precision configuration
- * @note Requires roomThermometer global variable to store sensor address
  */
-void initSensor() {
+bool initSensor() {
     sensors.begin();
+    
+    int deviceCount = sensors.getDeviceCount();
     Serial.print("Found ");
-    Serial.print(sensors.getDeviceCount(), DEC);
-    Serial.println(" devices.");
+    Serial.print(deviceCount, DEC);
+    Serial.println(" DS18B20 device(s).");
+
+    if (deviceCount == 0) {
+        tempSensorInitSuccess = false;
+        Serial.println("Error: No DS18B20 devices found on OneWire bus");
+        updateWebStatus("Error: No temperature sensor found");
+        return false;
+    }
 
     if (!sensors.getAddress(roomThermometer, 0)) {
         tempSensorInitSuccess = false;
-        Serial.println("Unable to find address for temperature sensor");
-        updateWebStatus("Error: Temperature sensor failed");
-    } else {
-        tempSensorInitSuccess = true;
-        Serial.println("DS18B20 Temperature sensor found");
-        updateWebStatus("System initializing...");
-        sensors.setResolution(roomThermometer, TEMP_RESOLUTION);
+        Serial.println("Error: Unable to find address for temperature sensor");
+        updateWebStatus("Error: Temperature sensor address not found");
+        return false;
     }
+    
+    tempSensorInitSuccess = true;
+    Serial.println("DS18B20 Temperature sensor initialized successfully");
+    updateWebStatus("System initializing...");
+    sensors.setResolution(roomThermometer, TEMP_RESOLUTION);
+    
+    return true;
 }
 
 /**
@@ -60,35 +71,40 @@ void initSensor() {
  * 
  * Requests temperature measurement from the DS18B20 sensor, waits for conversion
  * to complete, and retrieves the temperature reading. Handles disconnection errors
- * by logging to serial output and updating web status.
+ * and initialization failures by returning NAN.
  * 
- * @return float Temperature in Celsius degrees, or NAN if sensor is disconnected
- *              or reading fails
+ * @return float Temperature in Celsius degrees, or NAN if sensor is disconnected,
+ *              not initialized, or reading fails
  * 
  * @note Function includes a 750ms delay to allow for temperature conversion
  * @note Prints error message to Serial and updates web status on sensor failure
  */
 float readTemperature() {
+    if (!tempSensorInitSuccess) {
+        Serial.println("Error: Cannot read temperature - sensor not initialized");
+        return NAN;
+    }
+    
     sensors.requestTemperatures();
     delay(750);
     float tempC = sensors.getTempC(roomThermometer);
+    
     if (tempC == DEVICE_DISCONNECTED_C) {
         Serial.println("Error: DS18B20 disconnected");
-        updateWebStatus("Error: Temperature sensor read failed");
+        updateWebStatus("Error: Temperature sensor disconnected");
         return NAN;
     }
+    
     return tempC;
 }
 
 /**
  * @brief Reads the humidity value from the sensor
  * 
- * @note This function currently returns NAN (Not a Number) as a placeholder
- *       implementation. The DS18B20 sensor is a temperature-only sensor and
- *       does not measure humidity. This function may need to be removed or
- *       implemented for a different humidity sensor.
+ * @note The DS18B20 sensor is a temperature-only sensor and does not measure 
+ *       humidity. This function always returns NAN.
  * 
- * @return float The humidity value as a percentage (0-100%), or NAN if not available
+ * @return float NAN (Not a Number) as DS18B20 does not support humidity
  */
 float readHumidity() {
     return NAN;

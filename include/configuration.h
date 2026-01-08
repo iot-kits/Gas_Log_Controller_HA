@@ -66,8 +66,6 @@ static const int SDA_PIN = 3;		  // I2C SDA pin
 static const int SCL_PIN = 2;		  // I2C SCL pin
 static const int HBRIDGE_IN1_PIN = 1; // H-Bridge IN1 pin
 static const int HBRIDGE_IN2_PIN = 0; // H-Bridge IN2 pin
-//! Define to enable DS18B20 temperature sensor support or disable for alternative sensor
-// #define DS18B20						  // Define to enable DS18B20 temperature sensor support
 
 // Update intervals & settings
 static unsigned long STATUS_CHECK_INTERVAL = 5000;		  // Check status periodically
@@ -77,4 +75,5 @@ static const int TEMP_RESOLUTION = 11;					  // DS18b20 temperature sensor resol
 static unsigned long timeToOpenValve = 7000;			  // Time to fully open valve in milliseconds
 static unsigned long timeToCloseValve = 7000;			  // Time to fully close valve in milliseconds
 static const float THERMOSTAT_HYSTERESIS = 0.2;			  // Thermostat hysteresis in Fahrenheit degrees
+
 #endif													  // CONFIGURATION_H

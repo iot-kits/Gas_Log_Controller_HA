@@ -4,7 +4,7 @@
 #include <Arduino.h>        // for Arduino core
 #include "ArduinoOTA.h"     // for ArduinoOTA.handle() in loop()
 #include "configuration.h"  // for credentials, hardware connections, and control parameters
-#include "sensor.h"         // for sensor reading functions
+#include "ds18b20_sensor.h" // for DS18B20 temperature sensor functions
 #include "thermostat.h"     // for thermostat logic
 #include "valveDriver.h"    // for valve control
 #include "webSocket.h"      // set up webSocket
@@ -59,8 +59,7 @@ void loop()
       String tempMessage = String(buffer);
       notifyAllClients(tempMessage);
     }
-    // Error messages already handled by readTemperature()
-
+ 
     lastTempSensorUpdate = millis(); // update timestamp
   }
 

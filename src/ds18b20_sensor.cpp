@@ -1,26 +1,26 @@
 /**
  * @file ds18b20_sensor.cpp
- * @version 2026.01.05
- * @author Karl Berger & OpenAI ChatGPT
+ * @version 2026.01.08
+ * @author Karl Berger & MS Copilot
  * @brief DS18B20 temperature sensor interface implementation
  * 
  * This module provides functionality to interface with DS18B20 temperature sensors
  * using the Dallas Temperature library. It handles sensor initialization, temperature
  * reading, and error handling for disconnected sensors.
  */
-#ifdef DS18B20
+// #ifdef DS18B20
 
 #include "webSocket.h"	 // for updateWebStatus()
 #include "configuration.h" // for TEMP_RESOLUTION
-#include "ds18b20_sensor.h"
-#include <DallasTemperature.h>
-#include <OneWire.h>
+#include "ds18b20_sensor.h" // for DS18B20 sensor function declarations
+#include <DallasTemperature.h> // for DallasTemperature class
+#include <OneWire.h> // for OneWire bus communication
 
 // private module state
-static OneWire oneWire(ONE_WIRE_BUS);
-static DallasTemperature sensors(&oneWire);
-static DeviceAddress roomThermometer;
-static bool tempSensorInitSuccess = false;
+static OneWire oneWire(ONE_WIRE_BUS); // Instantiate OneWire bus on defined pin
+static DallasTemperature sensors(&oneWire); // Instantiate DallasTemperature sensor object
+static DeviceAddress roomThermometer;  // Device address for the room temperature sensor
+static bool tempSensorInitSuccess = false;  // Track if sensor initialized successfully
 
 /**
  * @brief Initializes the DS18B20 temperature sensor and configures it for operation.
@@ -74,7 +74,7 @@ bool initSensor() {
  * and initialization failures by returning NAN.
  * 
  * @return float Temperature in Celsius degrees, or NAN if sensor is disconnected,
- *              not initialized, or reading fails
+ *         not initialized, or reading fails
  * 
  * @note Function includes a 750ms delay to allow for temperature conversion
  * @note Prints error message to Serial and updates web status on sensor failure
@@ -85,11 +85,19 @@ float readTemperature() {
         return NAN;
     }
     
+    // Use non-blocking conversion with polling for optimal performance
+    sensors.setWaitForConversion(false);
     sensors.requestTemperatures();
-    delay(750);
+    
+    // Poll for conversion completion with timeout protection
+    unsigned long startTime = millis();
+    while (!sensors.isConversionComplete() && (millis() - startTime < 1000)) {
+        delay(10); // Small delay to prevent excessive polling
+    }
+    
     float tempC = sensors.getTempC(roomThermometer);
     
-    if (tempC == DEVICE_DISCONNECTED_C) {
+    if (tempC <= DEVICE_DISCONNECTED_C) {
         Serial.println("Error: DS18B20 disconnected");
         updateWebStatus("Error: Temperature sensor disconnected");
         return NAN;
@@ -98,16 +106,4 @@ float readTemperature() {
     return tempC;
 }
 
-/**
- * @brief Reads the humidity value from the sensor
- * 
- * @note The DS18B20 sensor is a temperature-only sensor and does not measure 
- *       humidity. This function always returns NAN.
- * 
- * @return float NAN (Not a Number) as DS18B20 does not support humidity
- */
-float readHumidity() {
-    return NAN;
-}
-
-#endif // DS18B20
+// #endif // DS18B20

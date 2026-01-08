@@ -44,25 +44,13 @@
 AsyncWebServer server(80); // Create AsyncWebServer object on port 80
 AsyncWebSocket ws("/ws");  // Create WebSocket object at URL /ws
 
-// Helper function to convert enum to string for JSON/WebSocket
-const char* valveStateToString(ValveState state)
-{
-    switch (state)
-    {
-        case ValveState::OFF:     return "OFF";
-        case ValveState::IDLE:    return "IDLE";  
-        case ValveState::HEATING: return "HEATING";
-        default:                  return "OFF";
-    }
-}
-
 // Global control state for the gas log controller
 
 ControlState controlState = {
     .powerOn = false,
     .autoMode = true,
     .setpointF = 70,
-    .valveState = ValveState::OFF}; // Initialize valve state
+    .valveState = "OFF"}; // Initialize valve state
 
 void broadcastControlState()
 {
@@ -71,7 +59,7 @@ void broadcastControlState()
     doc["power"] = controlState.powerOn ? "on" : "off";
     doc["mode"] = controlState.autoMode ? "automatic" : "manual";
     doc["setpoint"] = controlState.setpointF;
-    doc["valveState"] = valveStateToString(controlState.valveState);
+    doc["valveState"] = controlState.valveState;
 
     String payload;
     serializeJson(doc, payload);
@@ -83,15 +71,10 @@ void broadcastControlState()
 // Helper function to update valve state only when changed
 void setRoomTempColor(const char *newState)
 {
-    ValveState newEnum;
-    if (strcmp(newState, "OFF") == 0) newEnum = ValveState::OFF;
-    else if (strcmp(newState, "IDLE") == 0) newEnum = ValveState::IDLE;
-    else if (strcmp(newState, "HEATING") == 0) newEnum = ValveState::HEATING;
-    else newEnum = ValveState::OFF; // Default fallback
-    
-    if (controlState.valveState != newEnum)
+    String newStateStr(newState);
+    if (controlState.valveState != newStateStr)
     {
-        controlState.valveState = newEnum;
+        controlState.valveState = newStateStr;
         broadcastControlState();
     }
 }

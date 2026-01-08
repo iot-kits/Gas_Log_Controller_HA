@@ -13,7 +13,6 @@
 #include <Wire.h>           // I2C library
 
 // Status management
-String lastStatusMessage = "";          // Made available to webSocket.cpp
 String lastSliderState = "";            // Track slider state changes
 unsigned long lastStatusCheck = 0;      // Timestamp for last status check
 unsigned long lastTempSensorUpdate = 0; // Timestamp for last temperature sensor update

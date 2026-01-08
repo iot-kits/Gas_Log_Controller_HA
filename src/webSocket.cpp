@@ -15,31 +15,6 @@ ControlState controlState = {
     .setpointF = 70,
     .valveState = "OFF"}; // Initialize slider state
 
-/**
- * @brief Formats the current control state as a JSON string.
- *
- * Creates a JSON object containing the system's state information including
- * power status, operational mode, and temperature setpoint.
- *
- * @return String JSON formatted string with fields:
- *         - type: "state"
- *         - power: "on" or "off"
- *         - mode: "automatic" or "manual"
- *         - setpoint: temperature value in Fahrenheit
- *
- * @example
- * {"type":"state","power":"off","mode":"automatic","setpoint":70}
- */
-
-/**
- * @brief Broadcasts the current control state to all connected WebSocket clients.
- *
- * Formats the current control state as JSON and sends it to all connected
- * WebSocket clients via the notifyClients function. Also logs the broadcast
- * message to the serial console for debugging purposes.
- *
- * @note This function depends on the webSocket module's notifyClients function.
- */
 void broadcastControlState()
 {
     JsonDocument doc;
@@ -66,14 +41,6 @@ void setRoomTempColor(const char *newState)
     }
 }
 
-void notifySingleClient(AsyncWebSocketClient *client, const String &message)
-{
-    if (client)
-    {
-        client->text(message);
-    }
-}
-
 void notifyAllClients(const String &message)
 {
     if (ws.count() > 0)
@@ -94,9 +61,12 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
             JsonDocument doc;
             doc["type"] = "status";
             doc["message"] = "Connected to Gas Log Controller";
-            String welcome;
-            serializeJson(doc, welcome);
-            notifySingleClient(client, welcome);
+            String connectionWelcome;
+            serializeJson(doc, connectionWelcome);
+            if (client)
+            {
+                client->text(connectionWelcome);
+            }
         }
         broadcastControlState();
         break;
@@ -244,6 +214,9 @@ void websocketCleanup()
 
 void updateWebStatus(const String &statusMessage)
 {
+    // Static local variable to track last status message and prevent duplicates
+    static String lastStatusMessage = "";
+    
     // Only send if status changed
     if (statusMessage != lastStatusMessage)
     {
@@ -251,11 +224,11 @@ void updateWebStatus(const String &statusMessage)
         doc["type"] = "status";
         doc["message"] = statusMessage;
 
-        String message;
-        serializeJson(doc, message);
+        String jsonPayload;
+        serializeJson(doc, jsonPayload);
 
-        Serial.println("Sending WebSocket message: " + message);
-        notifyAllClients(message);
+        Serial.println("Sending WebSocket message: " + jsonPayload);
+        notifyAllClients(jsonPayload);
         Serial.println("Status: " + statusMessage);
         lastStatusMessage = statusMessage;
     }

@@ -1,5 +1,7 @@
 /**
  * @file webSocket.h
+ * @version 2026.01.08
+ * @author Karl Berger & MS Copilot
  * @brief WebSocket communication interface for the Gas Log Controller
  *
  * This header file provides the WebSocket functionality for real-time bidirectional
@@ -25,14 +27,6 @@
  */
 
 /**
- * @var lastStatusMessage
- * @brief Stores the most recent status message sent to clients
- *
- * External reference to a string containing the current system status from main.cpp.
- * Used for synchronizing new client connections with the current state.
- */
-
-/**
  * @brief WebSocket event handler callback
  *
  * Processes all WebSocket events including connections, disconnections, text messages,
@@ -53,9 +47,8 @@
 #include <Arduino.h>           // Core Arduino library
 #include <ESPAsyncWebServer.h> // https://github.com/ESP32Async/ESPAsyncWebServer
 
-extern AsyncWebServer server;    // Global web server instance
-extern AsyncWebSocket ws;        // Global WebSocket server instance
-extern String lastStatusMessage; // Access to current status from main.cpp
+extern AsyncWebServer server; // Global web server instance
+extern AsyncWebSocket ws;     // Global WebSocket server instance
 
 struct ControlState
 {
@@ -69,11 +62,11 @@ extern ControlState controlState;
 
 //! Web Socket event handler
 void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
-void broadcastControlState();                                                 //! Send current control state to all connected WebSocket clients
-void notifyAllClients(const String &message);                                 //! Notify all connected clients with a message
-void notifySingleClient(AsyncWebSocketClient *client, const String &message); //! Notify a specific client by client pointer
-void setRoomTempColor(const char *newState);                                  //! Update room temperature background color
-void updateWebStatus(const String &statusMessage);                            //! Update system status and notify clients
-void websocketBegin();                                                        //! Initialize WebSocket and serve UI files
-void websocketCleanup();                                                      //! Periodically clean up disconnected clients
-#endif                                                                        // WEBSOCKET_H
+void broadcastControlState();                      //! Send current control state to all connected WebSocket clients
+void notifyAllClients(const String &message);      //! Notify all connected clients with a message
+void setRoomTempColor(const char *newState);       //! Update room temperature background color
+void updateWebStatus(const String &statusMessage); //! Update system status and notify clients
+void websocketBegin();                             //! Initialize WebSocket and serve UI files
+void websocketCleanup();                           //! Periodically clean up disconnected clients
+
+#endif                                             // WEBSOCKET_H

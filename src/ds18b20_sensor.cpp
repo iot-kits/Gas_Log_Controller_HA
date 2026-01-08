@@ -39,6 +39,7 @@ static bool tempSensorInitSuccess = false;  // Track if sensor initialized succe
 bool initSensor()
 {
     sensors.begin();
+    String statusMessage = "Initializing temperature sensor...";
 
     int deviceCount = sensors.getDeviceCount();
     Serial.printf("Found %d DS18B20 device(s).\n", deviceCount);
@@ -46,22 +47,19 @@ bool initSensor()
     if (deviceCount == 0)
     {
         tempSensorInitSuccess = false;
-        Serial.println("Error: No DS18B20 devices found on OneWire bus");
-        updateWebStatus("Error: No temperature sensor found");
+        updateWebStatus("Error: No DS18B20 devices found");
         return false;
     }
 
     if (!sensors.getAddress(roomThermometer, 0))
     {
-        tempSensorInitSuccess = false;
-        Serial.println("Error: Unable to find address for temperature sensor");
-        updateWebStatus("Error: Temperature sensor address not found");
+        tempSensorInitSuccess = false;        
+        updateWebStatus("Error: Unable to find address for temperature sensor");
         return false;
     }
 
     tempSensorInitSuccess = true;
-    Serial.println("DS18B20 Temperature sensor initialized successfully");
-    updateWebStatus("System initializing...");
+    updateWebStatus("Temperature sensor initialized successfully");
     sensors.setResolution(roomThermometer, TEMP_RESOLUTION);
 
     return true;
@@ -81,10 +79,10 @@ bool initSensor()
  * @note Prints error message to Serial and updates web status on sensor failure
  */
 float readTemperature()
-{
+{   
     if (!tempSensorInitSuccess)
     {
-        Serial.println("Error: Cannot read temperature - sensor not initialized");
+        updateWebStatus("Error: Temperature sensor not initialized");
         return NAN;
     }
 

@@ -31,7 +31,6 @@ void setup()
   if (!tempSensorAvailable)
   {
     controlState.autoMode = false; // Force manual mode when no temperature sensor
-    Serial.println("WARNING: Temperature sensor not available - automatic mode disabled");
     updateWebStatus("Warning: Temperature sensor not detected - Automatic mode disabled");
   }
 }

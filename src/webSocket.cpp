@@ -112,7 +112,6 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
             else if (strcmp(value, "OFF") == 0)
             {
                 controlState.powerOn = false;
-                Serial.println("Power OFF command received");
                 setRoomTempColor("OFF");
                 updateWebStatus("System Powered Off");
             }
@@ -123,7 +122,6 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
             if (doc["value"].is<int>())
             {
                 controlState.setpointF = doc["value"].as<int>();
-                Serial.printf("Setpoint command received: %d°F\n", controlState.setpointF);
                 updateWebStatus("Setpoint updated to " + String(controlState.setpointF) + "°F");
                 broadcastControlState();
             }
@@ -138,9 +136,7 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
             {
                 if (!tempSensorAvailable)
                 {
-                    Serial.println("Mode AUTO command denied - no temperature sensor");
                     updateWebStatus("Error: Automatic mode requires temperature sensor");
-                    // Keep current mode, don't change controlState.autoMode
                 }
                 else
                 {

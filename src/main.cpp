@@ -13,25 +13,25 @@
 #include <Wire.h>           // I2C library
 
 // Status management
-String lastStatusMessage = ""; // Made available to webSocket.cpp
-String lastSliderState = "";   // Track slider state changes
-unsigned long lastStatusCheck = 0;
-unsigned long lastTempSensorUpdate = 0;
-bool tempSensorAvailable = false; // Track if sensor initialized successfully
+String lastStatusMessage = "";          // Made available to webSocket.cpp
+String lastSliderState = "";            // Track slider state changes
+unsigned long lastStatusCheck = 0;      // Timestamp for last status check
+unsigned long lastTempSensorUpdate = 0; // Timestamp for last temperature sensor update
+bool tempSensorAvailable = false;       // Track if sensor initialized successfully
 
 void setup()
 {
-  Serial.begin(115200);         // Initialize serial communication at 115200 baud
-  Wire.begin(SDA_PIN, SCL_PIN); // Begin I2C on pins assigned in configuration.h
-  pinMode(MIC_PIN, INPUT);      // Initialize the microphone pin as an input
-  wifiBegin();                  // Initialize WiFi
-  wifiConnect();                // Connect to WiFi
-  otaBegin();                   // Initialize Over-The-Air update service
-  websocketBegin();             // Initialize webSocket for bi-directional communication with web UI
-  valveDriverBegin();           // Initialize valve driver pins and state
+  Serial.begin(115200);               // Initialize serial communication at 115200 baud
+  Wire.begin(SDA_PIN, SCL_PIN);       // Begin I2C on pins assigned in configuration.h
+  wifiBegin();                        // Initialize WiFi
+  wifiConnect();                      // Connect to WiFi
+  otaBegin();                         // Initialize Over-The-Air update service
+  websocketBegin();                   // Initialize webSocket for bi-directional communication with web UI
+  valveDriverBegin();                 // Initialize valve driver pins and state
   tempSensorAvailable = initSensor(); // Initialize temperature sensor and check if successful
-  
-  if (!tempSensorAvailable) {
+
+  if (!tempSensorAvailable)
+  {
     Serial.println("WARNING: Temperature sensor not available - system will run without temperature feedback");
     updateWebStatus("Warning: No temperature sensor detected");
   }
@@ -49,7 +49,7 @@ void loop()
   {
     // readTemperature() returns NAN if sensor not initialized or disconnected
     float tempC = readTemperature();
-    
+
     if (!isnan(tempC))
     {
       tempF = tempC * 9.0 / 5.0 + 32.0; // Convert Celsius to Fahrenheit

@@ -1,3 +1,40 @@
+/**
+ * @file webSocket.cpp
+ * @version 2026.01.08
+ * @author Karl Berger & MS Copilot
+ * @brief WebSocket server implementation for Gas Log Controller ESP32
+ * 
+ * This module provides WebSocket communication functionality for a gas log controller,
+ * enabling real-time bidirectional communication between the ESP32 device and web clients.
+ * It handles control state management, JSON message parsing, and web file serving.
+ * 
+ * Key Features:
+ * - WebSocket server on port 80 with endpoint "/ws"
+ * - Real-time control state broadcasting to all connected clients
+ * - JSON-based message protocol for commands and status updates
+ * - Web file serving (HTML, CSS, JS, favicon) from LittleFS
+ * - Automatic client cleanup and connection management
+ * - Valve state control with string/enum conversion utilities
+ * 
+ * Supported WebSocket Messages:
+ * - "power": {"type": "power", "value": "ON"|"OFF"}
+ * - "setpoint": {"type": "setpoint", "value": <integer>}
+ * - "mode": {"type": "mode", "value": "automatic"|"manual"}
+ * 
+ * Outbound Message Types:
+ * - "state": Complete control state broadcast
+ * - "status": Status/error messages for user feedback
+ * 
+ * Dependencies:
+ * - ESPAsyncWebServer library for HTTP/WebSocket server
+ * - ArduinoJson library for JSON serialization/deserialization
+ * - LittleFS for web file storage and serving
+ * 
+ * Global State:
+ * - controlState: Main controller state (power, mode, setpoint, valve)
+ * - server: AsyncWebServer instance on port 80
+ * - ws: AsyncWebSocket instance at "/ws" endpoint
+ */
 #include "webSocket.h"         // header file for this module
 #include <ESPAsyncWebServer.h> // for AsyncWebServer and AsyncWebSocket
 #include <LittleFS.h>          // for index.html, styles.css, and script.js
@@ -140,7 +177,6 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
             if (doc["value"].is<int>())
             {
                 controlState.setpointF = doc["value"].as<int>();
-                updateWebStatus("Setpoint updated to " + String(controlState.setpointF) + "°F");
                 broadcastControlState();
             }
         }

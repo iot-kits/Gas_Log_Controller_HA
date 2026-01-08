@@ -10,22 +10,15 @@ body {
 
 /* Root-level variables (your new unified color system) */
 :root {
-  --temp-heating-bg: var(--roomTemperatureBackgroundColorHeating, #b71c1c);
-  --temp-idle-bg: var(--roomTemperatureBackgroundColorIdle, #1565c0);
-  --temp-off-bg: var(--roomTemperatureBackgroundColorOff, #424242);
-  --roomTemperatureBackgroundColorOff: #7f8c8d;     /* neutral gray for off */
-
-  /* Derived variables used by components */
+  /* Temperature display colors */
   --temp-heating-bg: #e74c3c;  /* heating: warm red */
-  --temp-idle-bg: #f1c40f;     /* idle: amber/yellow */
+  --temp-idle-bg: #3498db;     /* idle: blue */
   --temp-off-bg: #95a5a6;      /* off: muted gray */
-  --roomTemperatureBackgroundColorOff: #6c757d;
-
-  /* Aliases used throughout the UI */
-  --temp-heating-bg: var(--roomTemperatureBackgroundColorHeating);
-  --temp-idle-bg: var(--roomTemperatureBackgroundColorIdle);
-  --temp-off-bg: var(--roomTemperatureBackgroundColorOff);
-  --temp-text-color: white;
+  
+  /* Text colors for each state */
+  --temp-heating-text: white;
+  --temp-idle-text: white;
+  --temp-off-text: white;
 }
 
 .container {
@@ -60,19 +53,19 @@ body {
 /* Heating */
 .temp-display.temp-heating {
   background-color: var(--temp-heating-bg);
-  color: var(--temp-text-color);
+  color: var(--temp-heating-text);
 }
 
 /* Idle */
 .temp-display.temp-idle {
   background-color: var(--temp-idle-bg);
-  color: var(--temp-text-color);
+  color: var(--temp-idle-text);
 }
 
 /* Off */
 .temp-display.temp-off {
   background-color: var(--temp-off-bg);
-  color: var(--temp-text-color);
+  color: var(--temp-off-text);
 }
 
 .slider-container {

@@ -42,11 +42,6 @@ function processWebSocketMessage(message) {
       updateTemperatureDisplay(data.value);
     }
 
-    // Handle room temp background state/color updates
-    if (data.type === "valveState") {
-      setRoomTempBackground(data.value);
-    }
-
     // Handle full state sync
     if (data.type === "state") {
       if (data.power) {
@@ -62,6 +57,10 @@ function processWebSocketMessage(message) {
           slider.value = data.setpoint;
           setpointDisplay.textContent = `${data.setpoint}°F`;
         }
+      }
+      // Handle valve state for room temp background color
+      if (data.valveState) {
+        setRoomTempBackground(data.valveState);
       }
     }
   } catch (error) {

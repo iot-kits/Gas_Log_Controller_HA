@@ -39,7 +39,7 @@ void setup()
 
 void loop()
 {
-  static float tempF = 0.0; // Declare tempF at function scope
+  static float tempF = NAN; // Initialize to NAN to indicate no valid reading yet
   wifiConnect();            // Automatically reconnects if disconnected
   ArduinoOTA.handle();      // Handle OTA updates
   websocketCleanup();       // Perform web client cleanup
@@ -47,32 +47,19 @@ void loop()
   // Non-blocking periodic sensor update
   if (millis() - lastTempSensorUpdate > SENSOR_UPDATE_INTERVAL)
   {
-    // Only try to read sensor if initialization was successful
-    if (tempSensorAvailable)
+    // readTemperature() returns NAN if sensor not initialized or disconnected
+    float tempC = readTemperature();
+    
+    if (!isnan(tempC))
     {
-      float tempC = readTemperature();
-      float humidity = readHumidity();
-
-      if (!isnan(tempC))
-      {
-        tempF = tempC * 9.0 / 5.0 + 32.0; // Convert Celsius to Fahrenheit
-        Serial.printf("Room Temp: %.1f °F\n", tempF);
-        char buffer[64];
-        snprintf(buffer, sizeof(buffer), "{\"type\":\"temperature\",\"value\":%.1f}", tempF);
-        String tempMessage = String(buffer);
-        notifyAllClients(tempMessage);
-      }
-      else
-      {
-        Serial.println("Error: Temperature sensor read failed");
-        updateWebStatus("Error: Temperature sensor read failed");
-      }
+      tempF = tempC * 9.0 / 5.0 + 32.0; // Convert Celsius to Fahrenheit
+      Serial.printf("Room Temp: %.1f °F\n", tempF);
+      char buffer[64];
+      snprintf(buffer, sizeof(buffer), "{\"type\":\"temperature\",\"value\":%.1f}", tempF);
+      String tempMessage = String(buffer);
+      notifyAllClients(tempMessage);
     }
-    else
-    {
-      // Sensor not available, send a placeholder or error value
-      Serial.println("Warning: Temperature sensor not available");
-    }
+    // Error messages already handled by readTemperature()
 
     lastTempSensorUpdate = millis(); // update timestamp
   }

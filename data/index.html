@@ -1,74 +1,86 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Gas Log Controller</title>
-<link rel="stylesheet" href="styles.css" />
-<link rel="icon" type="image/x-icon" href="favicon.ico">
-</head>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gas Log Controller</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+  </head>
 
-<body>
-<div class="controller-card">
+  <body>
+    <div class="controller-card">
+      <!-- Header -->
+      <div class="header-row">
+        <div class="title">Gas Log Controller</div>
+        <div class="status-chip">
+          <span class="status-dot"></span>
+          <span id="status-message">Connected</span>
+        </div>
+      </div>
 
-  <!-- Header -->
-  <div class="header-row">
-    <div class="title">Gas Log Controller</div>
-    <div class="status-chip">
-      <span class="status-dot"></span>
-      <span id="status-message">Connected</span>
-    </div>
-  </div>
+      <!-- Temperature Dial -->
+      <div class="dial-wrapper">
+        <div class="dial-label">Room Temperature</div>
 
-  <!-- Temperature Dial -->
-  <div class="dial-wrapper">
-    <div class="dial-label">Room Temperature</div>
+        <div class="dial">
+          <div class="dial-ring"></div>
+          <div class="dial-inner">
+            <div class="temp-current">
+              <span id="room-temp">--</span><span class="temp-unit">°F</span>
+            </div>
+            <div class="temp-state" id="temp-state">Off</div>
+          </div>
+        </div>
+      </div>
 
-    <div class="dial">
-      <div class="dial-ring"></div>
-      <div class="dial-inner">
-        <div class="temp-current"><span id="room-temp">--</span><span class="temp-unit">°F</span></div>
-        <div class="temp-state" id="temp-state">Off</div>
+      <!-- Set Temperature -->
+      <div>
+        <div class="section-title-row">
+          <div class="section-title">Set Temperature</div>
+          <div class="section-value" id="setpoint-value">70°F</div>
+        </div>
+
+        <input type="range" id="temp-slider" min="64" max="74" value="70" />
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 4px;
+          "
+        >
+          <span>64</span>
+          <span>65</span>
+          <span>66</span>
+          <span>67</span>
+          <span>68</span>
+          <span>69</span>
+          <span>70</span>
+          <span>71</span>
+          <span>72</span>
+          <span>73</span>
+          <span>74</span>
+        </div>
+      </div>
+
+      <!-- 3‑Position Selector -->
+      <div class="selector-group" id="mode-group">
+        <div class="selector-label">Mode</div>
+
+        <div class="selector-row">
+          <div class="selector-btn toggle-button active" data-value="OFF">
+            Off
+          </div>
+          <div class="selector-btn toggle-button" data-value="THERMOSTAT">
+            Thermostat
+          </div>
+          <div class="selector-btn toggle-button" data-value="MANUAL">On</div>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Set Temperature -->
-  <div>
-    <div class="section-title-row">
-      <div class="section-title">Set Temperature</div>
-      <div class="section-value" id="setpoint-value">70°F</div>
-    </div>
-
-    <input type="range" id="temp-slider" min="64" max="74" value="70" />
-    <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--text-muted); margin-top:4px;">
-      <span>64</span>
-      <span>65</span>
-      <span>66</span>
-      <span>67</span>
-      <span>68</span>
-      <span>69</span>
-      <span>70</span>
-      <span>71</span>
-      <span>72</span>
-      <span>73</span>
-      <span>74</span>
-    </div>
-  </div>
-
-  <!-- 3‑Position Selector -->
-  <div class="selector-group" id="mode-group">
-    <div class="selector-label">Mode</div>
-
-    <div class="selector-row">
-      <div class="selector-btn toggle-button active" data-value="OFF">Off</div>
-      <div class="selector-btn toggle-button" data-value="THERMOSTAT">Thermostat</div>
-	  <div class="selector-btn toggle-button" data-value="MANUAL">On</div>
-    </div>
-  </div>
-
-</div>
-
-<script src="script.js"></script>
-</body>
+    <script src="script.js"></script>
+  </body>
 </html>

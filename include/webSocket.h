@@ -51,12 +51,22 @@ extern AsyncWebServer server; // Global web server instance
 extern AsyncWebSocket ws;     // Global WebSocket server instance
 extern bool tempSensorAvailable; // Temperature sensor availability status
 
+enum class ValveState 
+{
+    OFF,
+    IDLE, 
+    HEATING
+};
+
+// Helper function to convert enum to string for JSON/WebSocket
+const char* valveStateToString(ValveState state);
+
 struct ControlState
 {
     bool powerOn;           // true = ON, false = OFF
     bool autoMode;          // true = AUTOMATIC, false = MANUAL
     int setpointF;          // Temperature setpoint in Fahrenheit
-    const char *valveState; // "HEATING", "IDLE", or "OFF"
+    ValveState valveState;  // OFF, IDLE, or HEATING
 };
 
 extern ControlState controlState;

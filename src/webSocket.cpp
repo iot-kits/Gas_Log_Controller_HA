@@ -7,13 +7,25 @@
 AsyncWebServer server(80); // Create AsyncWebServer object on port 80
 AsyncWebSocket ws("/ws");  // Create WebSocket object at URL /ws
 
+// Helper function to convert enum to string for JSON/WebSocket
+const char* valveStateToString(ValveState state)
+{
+    switch (state)
+    {
+        case ValveState::OFF:     return "OFF";
+        case ValveState::IDLE:    return "IDLE";  
+        case ValveState::HEATING: return "HEATING";
+        default:                  return "OFF";
+    }
+}
+
 // Global control state for the gas log controller
 
 ControlState controlState = {
     .powerOn = false,
     .autoMode = true,
     .setpointF = 70,
-    .valveState = "OFF"}; // Initialize slider state
+    .valveState = ValveState::OFF}; // Initialize valve state
 
 void broadcastControlState()
 {
@@ -22,7 +34,7 @@ void broadcastControlState()
     doc["power"] = controlState.powerOn ? "on" : "off";
     doc["mode"] = controlState.autoMode ? "automatic" : "manual";
     doc["setpoint"] = controlState.setpointF;
-    doc["valveState"] = controlState.valveState;
+    doc["valveState"] = valveStateToString(controlState.valveState);
 
     String payload;
     serializeJson(doc, payload);
@@ -31,12 +43,18 @@ void broadcastControlState()
     Serial.println("Broadcasted control state: " + payload);
 }
 
-// Helper function to update slider state only when changed
+// Helper function to update valve state only when changed
 void setRoomTempColor(const char *newState)
 {
-    if (strcmp(controlState.valveState, newState) != 0)
+    ValveState newEnum;
+    if (strcmp(newState, "OFF") == 0) newEnum = ValveState::OFF;
+    else if (strcmp(newState, "IDLE") == 0) newEnum = ValveState::IDLE;
+    else if (strcmp(newState, "HEATING") == 0) newEnum = ValveState::HEATING;
+    else newEnum = ValveState::OFF; // Default fallback
+    
+    if (controlState.valveState != newEnum)
     {
-        controlState.valveState = newState;
+        controlState.valveState = newEnum;
         broadcastControlState();
     }
 }

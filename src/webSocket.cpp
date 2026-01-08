@@ -136,17 +136,26 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
 
             if (valueLower == "automatic")
             {
-                controlState.autoMode = true;
-                Serial.println("Mode AUTO command received");
-                if (controlState.powerOn)
+                if (!tempSensorAvailable)
                 {
-                    setRoomTempColor("IDLE");
-                    updateWebStatus("Mode: Automatic - Idle");
+                    Serial.println("Mode AUTO command denied - no temperature sensor");
+                    updateWebStatus("Error: Automatic mode requires temperature sensor");
+                    // Keep current mode, don't change controlState.autoMode
                 }
                 else
                 {
-                    setRoomTempColor("OFF");
-                    updateWebStatus("Mode: Automatic - System Off");
+                    controlState.autoMode = true;
+                    Serial.println("Mode AUTO command received");
+                    if (controlState.powerOn)
+                    {
+                        setRoomTempColor("IDLE");
+                        updateWebStatus("Mode: Automatic - Idle");
+                    }
+                    else
+                    {
+                        setRoomTempColor("OFF");
+                        updateWebStatus("Mode: Automatic - System Off");
+                    }
                 }
             }
             else if (valueLower == "manual")

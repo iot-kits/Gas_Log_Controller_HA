@@ -49,6 +49,7 @@
 
 extern AsyncWebServer server; // Global web server instance
 extern AsyncWebSocket ws;     // Global WebSocket server instance
+extern bool tempSensorAvailable; // Temperature sensor availability status
 
 struct ControlState
 {

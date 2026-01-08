@@ -13,7 +13,6 @@
 #include <Wire.h>           // I2C library
 
 // Status management
-String lastSliderState = "";            // Track slider state changes
 unsigned long lastStatusCheck = 0;      // Timestamp for last status check
 unsigned long lastTempSensorUpdate = 0; // Timestamp for last temperature sensor update
 bool tempSensorAvailable = false;       // Track if sensor initialized successfully
@@ -31,8 +30,9 @@ void setup()
 
   if (!tempSensorAvailable)
   {
-    Serial.println("WARNING: Temperature sensor not available - system will run without temperature feedback");
-    updateWebStatus("Warning: No temperature sensor detected");
+    controlState.autoMode = false; // Force manual mode when no temperature sensor
+    Serial.println("WARNING: Temperature sensor not available - automatic mode disabled");
+    updateWebStatus("Warning: Temperature sensor not detected - Automatic mode disabled");
   }
 }
 

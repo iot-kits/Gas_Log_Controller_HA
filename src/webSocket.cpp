@@ -45,10 +45,10 @@ AsyncWebServer server(80); // Create AsyncWebServer object on port 80
 AsyncWebSocket ws("/ws");  // Create WebSocket object at URL /ws
 
 // Global control state for the gas log controller
+// mode: 0 = OFF, 1 = MANUAL, 2 = THERMOSTAT
 
 ControlState controlState = {
-    .powerOn = false,
-    .autoMode = true,
+    .mode = 0,          // Start in OFF mode
     .setpointF = 70,
     .valveState = "OFF"}; // Initialize valve state
 
@@ -56,8 +56,16 @@ void broadcastControlState()
 {
     JsonDocument doc;
     doc["type"] = "state";
-    doc["power"] = controlState.powerOn ? "on" : "off";
-    doc["mode"] = controlState.autoMode ? "automatic" : "manual";
+    
+    // Send mode as string: OFF, MANUAL, or THERMOSTAT
+    if (controlState.mode == 0) {
+        doc["mode"] = "OFF";
+    } else if (controlState.mode == 1) {
+        doc["mode"] = "MANUAL";
+    } else {
+        doc["mode"] = "THERMOSTAT";
+    }
+    
     doc["setpoint"] = controlState.setpointF;
     doc["valveState"] = controlState.valveState;
 
@@ -129,33 +137,7 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
 
         const char *msgType = doc["type"] | "";
 
-        if (strcmp(msgType, "power") == 0)
-        {
-            const char *value = doc["value"] | "";
-            if (strcmp(value, "ON") == 0)
-            {
-                controlState.powerOn = true;
-                Serial.println("Power ON command received");
-                if (controlState.autoMode)
-                {
-                    setRoomTempColor("IDLE");
-                    updateWebStatus("System Powered On - Automatic Mode");
-                }
-                else
-                {
-                    setRoomTempColor("HEATING");
-                    updateWebStatus("Manual Mode: Heating");
-                }
-            }
-            else if (strcmp(value, "OFF") == 0)
-            {
-                controlState.powerOn = false;
-                setRoomTempColor("OFF");
-                updateWebStatus("System Powered Off");
-            }
-            broadcastControlState();
-        }
-        else if (strcmp(msgType, "setpoint") == 0)
+        if (strcmp(msgType, "setpoint") == 0)
         {
             if (doc["value"].is<int>())
             {
@@ -166,44 +148,37 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
         else if (strcmp(msgType, "mode") == 0)
         {
             const char *value = doc["value"] | "";
-            String valueLower(value);
-            valueLower.toLowerCase();
+            String valueUpper(value);
+            valueUpper.toUpperCase();
 
-            if (valueLower == "automatic")
+            if (valueUpper == "OFF")
+            {
+                controlState.mode = 0;
+                Serial.println("Mode OFF command received");
+                setRoomTempColor("OFF");
+                updateWebStatus("System Off");
+            }
+            else if (valueUpper == "MANUAL")
+            {
+                controlState.mode = 1;
+                Serial.println("Mode MANUAL command received");
+                setRoomTempColor("HEATING");
+                updateWebStatus("Manual Mode: Heating");
+            }
+            else if (valueUpper == "THERMOSTAT")
             {
                 if (!tempSensorAvailable)
                 {
-                    updateWebStatus("Error: Automatic mode requires temperature sensor");
-                }
-                else
-                {
-                    controlState.autoMode = true;
-                    Serial.println("Mode AUTO command received");
-                    if (controlState.powerOn)
-                    {
-                        setRoomTempColor("IDLE");
-                        updateWebStatus("Mode: Automatic - Idle");
-                    }
-                    else
-                    {
-                        setRoomTempColor("OFF");
-                        updateWebStatus("Mode: Automatic - System Off");
-                    }
-                }
-            }
-            else if (valueLower == "manual")
-            {
-                controlState.autoMode = false;
-                Serial.println("Mode MANUAL command received");
-                if (controlState.powerOn)
-                {
-                    setRoomTempColor("HEATING");
-                    updateWebStatus("Mode: Manual - Heating");
-                }
-                else
-                {
+                    updateWebStatus("Error: Thermostat mode requires temperature sensor");
+                    controlState.mode = 0; // Force to OFF if no sensor
                     setRoomTempColor("OFF");
-                    updateWebStatus("Mode: Manual - System Off");
+                }
+                else
+                {
+                    controlState.mode = 2;
+                    Serial.println("Mode THERMOSTAT command received");
+                    setRoomTempColor("IDLE");
+                    updateWebStatus("Thermostat Mode: Idle");
                 }
             }
             broadcastControlState();

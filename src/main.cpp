@@ -30,8 +30,8 @@ void setup()
 
   if (!tempSensorAvailable)
   {
-    controlState.autoMode = false; // Force manual mode when no temperature sensor
-    updateWebStatus("Warning: Temperature sensor not detected - Automatic mode disabled");
+    controlState.mode = 0; // Force OFF mode when no temperature sensor
+    updateWebStatus("Warning: Temperature sensor not detected - Thermostat mode disabled");
   }
 }
 
@@ -61,54 +61,47 @@ void loop()
     lastTempSensorUpdate = millis(); // update timestamp
   }
 
-  // MANUAL mode handling
-  if (!controlState.autoMode)
+  // Handle three-state mode system
+  switch (controlState.mode)
   {
-    if (controlState.powerOn) // Manual mode with power ON
-    {
-      valveOpenRequest(true);
-      setRoomTempColor("HEATING");
-      updateWebStatus("Manual Mode: Heating");
-    }
-    else // Manual mode with power OFF
-    {
-      valveOpenRequest(false);
-      setRoomTempColor("OFF");
-      updateWebStatus("Manual Mode: Off");
-    }
-    return; // exit loop after handling MANUAL mode
-  }
+  case 0: // OFF mode
+    valveOpenRequest(false);
+    setRoomTempColor("OFF");
+    updateWebStatus("System Off");
+    break;
 
-  // fall through to AUTOMATIC mode
-  if (controlState.powerOn)
-  {
-    // Automatic Mode with Power ON: run periodic status check
+  case 1: // MANUAL mode
+    valveOpenRequest(true);
+    setRoomTempColor("HEATING");
+    updateWebStatus("Manual Mode: Heating");
+    break;
+
+  case 2: // THERMOSTAT mode
+    // Run periodic status check for thermostat mode
     if (millis() - lastStatusCheck > STATUS_CHECK_INTERVAL)
     {
-      Serial.println("Power ON, AUTO mode.");
-      if (controlState.autoMode)
+      Serial.println("THERMOSTAT mode active.");
+      if (thermostatHeatCall(tempF, controlState.setpointF))
       {
-        Serial.println("Automatic mode active.");
-        if (thermostatHeatCall(tempF, controlState.setpointF))
-        {
-          setRoomTempColor("HEATING");
-          updateWebStatus("Thermostat: Heating");
-          valveOpenRequest(true);
-        }
-        else
-        {
-          setRoomTempColor("IDLE");
-          updateWebStatus("Thermostat: Idle");
-          valveOpenRequest(false);
-        }
+        setRoomTempColor("HEATING");
+        updateWebStatus("Thermostat: Heating");
+        valveOpenRequest(true);
+      }
+      else
+      {
+        setRoomTempColor("IDLE");
+        updateWebStatus("Thermostat: Idle");
+        valveOpenRequest(false);
       }
       lastStatusCheck = millis();
     }
-  }
-  else
-  {
-    valveOpenRequest(false); // power state is OFF, ensure valve is closed
+    break;
+
+  default:
+    // Safety fallback - turn off if mode is invalid
+    valveOpenRequest(false);
     setRoomTempColor("OFF");
-    updateWebStatus("System Powered Off");
+    updateWebStatus("Error: Invalid mode");
+    break;
   }
 }

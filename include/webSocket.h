@@ -53,10 +53,9 @@ extern bool tempSensorAvailable; // Temperature sensor availability status
 
 struct ControlState
 {
-    bool powerOn;           // true = ON, false = OFF
-    bool autoMode;          // true = AUTOMATIC, false = MANUAL
-    int setpointF;          // Temperature setpoint in Fahrenheit
-    String valveState;      // "OFF", "IDLE", or "HEATING"
+    int mode;              // 0 = OFF, 1 = MANUAL, 2 = THERMOSTAT
+    int setpointF;         // Temperature setpoint in Fahrenheit
+    String valveState;     // "OFF", "IDLE", or "HEATING"
 };
 
 extern ControlState controlState;

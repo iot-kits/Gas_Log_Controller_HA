@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Gas Log Controller – Appliance (3‑State)</title>
+
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card-bg: #ffffff;
+    --text-main: #1f2933;
+    --text-muted: #7b8794;
+
+    /* State colors */
+    --accent-heating: #e53935;
+    --accent-idle: #1e88e5;
+    --accent-off: #9e9e9e;
+
+    --accent-connected: #2ecc71;
+
+    --slider-track: #d0d7e2;
+    --slider-thumb: #1e88e5;
+
+    --button-bg: #e4e7eb;
+    --button-active-bg: #1e88e5;
+    --button-active-text: #ffffff;
+
+    --shadow-soft: 0 14px 40px rgba(15, 23, 42, 0.18);
+  }
+
+  * {
+    box-sizing: border-box;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at top, #e9edf5 0, #f4f5f7 40%, #e3e7f0 100%);
+    color: var(--text-main);
+  }
+
+  .controller-card {
+    width: 360px;
+    max-width: 95vw;
+    background: var(--card-bg);
+    border-radius: 24px;
+    padding: 20px 22px 22px;
+    box-shadow: var(--shadow-soft);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  /* Header */
+  .header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .title {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 9px;
+    border-radius: 999px;
+    background: #e6f9ef;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--accent-connected);
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent-connected);
+    box-shadow: 0 0 0 4px rgba(46, 204, 113, 0.18);
+  }
+
+  /* Temperature Dial */
+  .dial-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding-top: 4px;
+  }
+
+.dial-label {
+  width: 100%;
+  text-align: left;
+  margin-left: 2px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+  .dial {
+    position: relative;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Heating ring (same as original appliance mockup) */
+  .dial-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: conic-gradient(
+      from 220deg,
+      #ffc371 0deg,
+      #ff7f50 120deg,
+      #e53935 260deg,
+      #ffc371 360deg
+    );
+    filter: drop-shadow(0 0 20px rgba(229, 57, 53, 0.35));
+    padding: 8px;
+  }
+
+  .dial-inner {
+    position: absolute;
+    inset: 8px;
+    border-radius: 50%;
+    background: radial-gradient(circle at top, #ffffff 0, #eef1f6 60%, #e1e5ee 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+      inset 0 1px 2px rgba(255, 255, 255, 0.7),
+      inset 0 -4px 8px rgba(15, 23, 42, 0.12);
+  }
+
+  .temp-current {
+    font-size: 40px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .temp-unit {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-left: 3px;
+  }
+
+  .temp-state {
+    margin-top: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--accent-heating);
+  }
+
+  /* Set Temperature */
+  .section-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 6px;
+  }
+
+  .section-title {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+  }
+
+  .section-value {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-main);
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--slider-track);
+    outline: none;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 2px solid var(--slider-thumb);
+    box-shadow:
+      0 0 0 4px rgba(30, 136, 229, 0.18),
+      0 4px 10px rgba(15, 23, 42, 0.25);
+    cursor: pointer;
+    margin-top: -6px;
+  }
+
+  /* 3‑Position Selector */
+  .selector-group {
+    margin-top: 10px;
+  }
+
+  .selector-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+
+  .selector-row {
+    display: flex;
+    justify-content: space-between;
+    background: #eaecf0;
+    padding: 6px;
+    border-radius: 999px;
+  }
+
+  .selector-btn {
+    flex: 1;
+    margin: 0 4px;
+    padding: 10px 0;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: center;
+    background: transparent;
+    color: var(--text-main);
+    cursor: default;
+  }
+
+  .selector-btn.active {
+    background: var(--button-active-bg);
+    color: var(--button-active-text);
+    box-shadow: 0 4px 10px rgba(30, 136, 229, 0.35);
+  }
+
+  /* Footer */
+  .footer {
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #dde1e7;
+    padding-top: 8px;
+  }
+
+  .footer-state {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .footer-state-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent-heating);
+  }
+
+  .footer-state-label {
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+</style>
+</head>
+
+<body>
+<div class="controller-card">
+
+  <!-- Header -->
+  <div class="header-row">
+    <div class="title">Gas Log Controller</div>
+    <div class="status-chip">
+      <span class="status-dot"></span>
+      <span>Connected</span>
+    </div>
+  </div>
+
+  <!-- Temperature Dial -->
+<div class="dial-wrapper">
+  <div class="dial-label">Room Temperature</div>
+
+  <div class="dial">
+    <div class="dial-ring"></div>
+    <div class="dial-inner">
+      <div class="temp-current">68.9<span class="temp-unit">°F</span></div>
+      <div class="temp-state">Heating</div>
+    </div>
+  </div>
+</div>
+
+  <!-- Set Temperature -->
+  <div>
+    <div class="section-title-row">
+      <div class="section-title">Set Temperature</div>
+      <div class="section-value">70°F</div>
+    </div>
+
+    <input type="range" min="64" max="74" value="70" disabled />
+    <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--text-muted); margin-top:4px;">
+      <span>64</span>
+      <span>65</span>
+      <span>66</span>
+      <span>67F</span>
+      <span>68</span>
+      <span>69</span>
+      <span>70</span>
+      <span>71</span>
+      <span>72</span>
+      <span>73</span>
+      <span>74</span>
+    </div>
+  </div>
+
+<!-- 3‑Position Selector -->
+<div class="selector-group">
+  <div class="selector-label">Mode</div>
+
+  <div class="selector-row">
+    <div class="selector-btn">Off</div>
+    <div class="selector-btn">Man</div>
+    <div class="selector-btn active">Therm</div>
+  </div>
+</div>
+
+</div>
+</body>
+</html>

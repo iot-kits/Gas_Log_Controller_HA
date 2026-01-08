@@ -44,9 +44,6 @@ function processWebSocketMessage(message) {
 
     // Handle full state sync
     if (data.type === "state") {
-      if (data.power) {
-        updateToggleGroup("power-group", data.power);
-      }
       if (data.mode) {
         updateToggleGroup("mode-group", data.mode);
       }
@@ -165,11 +162,9 @@ function setupToggleGroup(groupId) {
       buttons.forEach((btn) => btn.classList.remove("active"));
       button.classList.add("active");
 
-      // Determine message type based on group
-      const messageType = groupId === "power-group" ? "power" : "mode";
-
+      // Send mode command
       const message = JSON.stringify({
-        type: messageType,
+        type: "mode",
         value: button.dataset.value,
       });
       sendCommand(message);
@@ -201,17 +196,14 @@ function sendSetpoint() {
 slider.addEventListener("mouseup", sendSetpoint);
 slider.addEventListener("touchend", sendSetpoint);
 
-// Initialize toggle groups
-setupToggleGroup("power-group");
+// Initialize toggle group
 setupToggleGroup("mode-group");
 
 document.addEventListener("DOMContentLoaded", function () {
   initWebSocket();
 
-  setupToggleGroup("power-group");
   setupToggleGroup("mode-group");
 
-  // Set initial state to OFF and AUTOMATIC
-  sendCommand(JSON.stringify({ type: "power", value: "OFF" }));
-  sendCommand(JSON.stringify({ type: "mode", value: "AUTOMATIC" }));
+  // Set initial state to OFF
+  sendCommand(JSON.stringify({ type: "mode", value: "OFF" }));
 });

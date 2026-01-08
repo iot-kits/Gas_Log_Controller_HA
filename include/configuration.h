@@ -26,7 +26,6 @@
  * - ONE_WIRE_BUS: Dallas DS18B20 temperature sensor data pin (GPIO 6)
  * - SDA_PIN/SCL_PIN: I2C communication pins (GPIO 3/2)
  * - HBRIDGE_IN1_PIN/HBRIDGE_IN2_PIN: H-Bridge motor control pins (GPIO 1/0)
- * - MIC_PIN: Microphone analog input pin (GPIO 10) - currently unused
  *
  * @section timing_config Timing and Operational Settings
  * - STATUS_CHECK_INTERVAL: Frequency of system status checks (5 seconds)
@@ -76,4 +75,4 @@ static unsigned long timeToOpenValve = 7000;			  // Time to fully open valve in 
 static unsigned long timeToCloseValve = 7000;			  // Time to fully close valve in milliseconds
 static const float THERMOSTAT_HYSTERESIS = 0.2;			  // Thermostat hysteresis in Fahrenheit degrees
 
-#endif													  // CONFIGURATION_H
+#endif // CONFIGURATION_H

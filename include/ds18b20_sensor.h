@@ -24,11 +24,4 @@ bool initSensor();
  */
 float readTemperature();
 
-/**
- * @brief Reads humidity value
- * @return Humidity value as a percentage (0-100) as a float
- * @note DS18B20 sensors only measure temperature. This function returns NAN.
- */
-;float readHumidity();
-
 #endif // DS18B20_SENSOR_H

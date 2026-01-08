@@ -1,6 +1,9 @@
 /**
+ * @file thermostat.cpp
+ * @version 2026.01.08
+ * @author Karl Berger & MS Copilot
  * @brief Determines the heating system call status based on room temperature and setpoint with hysteresis.
- *
+ * 
  * This function implements a thermostat control logic with hysteresis to prevent rapid on/off cycling.
  * The heating system turns ON when the room temperature drops below (setpoint - hysteresis) and turns
  * OFF when the temperature rises above (setpoint + hysteresis).

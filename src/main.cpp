@@ -72,10 +72,6 @@ switch (controlState.mode) {
   case MODE_ON:  // manual
     setRoomTempColor("HEATING");
     valveOpenRequest(true);
-    // if (controlState.manualValveOpen) {
-    //   setRoomTempColor("HEATING");
-    // } 
-    // valveOpenRequest(controlState.manualValveOpen);
     break;
 
   case MODE_THERMOSTAT:
@@ -90,8 +86,8 @@ switch (controlState.mode) {
 
   default:
     // Safety fallback - turn off if mode is invalid
-    valveOpenRequest(false);
     setRoomTempColor("OFF");
+    valveOpenRequest(false);
     updateWebStatus("Error: Invalid mode");
     break;
   }

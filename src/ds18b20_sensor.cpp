@@ -8,7 +8,6 @@
  * using the Dallas Temperature library. It handles sensor initialization, temperature
  * reading, and error handling for disconnected sensors.
  */
-// #ifdef DS18B20
 
 #include "webSocket.h"         // for updateWebStatus()
 #include "configuration.h"     // for TEMP_RESOLUTION
@@ -39,7 +38,6 @@ static bool tempSensorInitSuccess = false;  // Track if sensor initialized succe
 bool initSensor()
 {
     sensors.begin();
-    String statusMessage = "Initializing temperature sensor...";
 
     int deviceCount = sensors.getDeviceCount();
     Serial.printf("Found %d DS18B20 device(s).\n", deviceCount);
@@ -108,5 +106,3 @@ float readTemperature()
 
     return tempC;
 }
-
-// #endif // DS18B20

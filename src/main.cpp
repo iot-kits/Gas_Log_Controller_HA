@@ -52,6 +52,8 @@ void loop()
     {
       tempF = tempC * 9.0 / 5.0 + 32.0; // Convert Celsius to Fahrenheit
       Serial.printf("Room Temp: %.1f °F\n", tempF);
+      // Update live room temperature in control state so new WS clients see it immediately
+      controlState.roomTempF = tempF;
       char buffer[64];
       snprintf(buffer, sizeof(buffer), "{\"type\":\"temperature\",\"value\":%.1f}", tempF);
       String tempMessage = String(buffer);

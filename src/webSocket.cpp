@@ -50,7 +50,8 @@ AsyncWebSocket ws("/ws");  // Create WebSocket object at URL /ws
 ControlState controlState = {
     .mode = MODE_OFF,          // Start in OFF mode
     .setpointF = 70,
-    .valveState = "OFF"}; // Initialize valve state
+    .valveState = "OFF",
+    .roomTempF = 0.0f}; // Initialize valve state and room temperature
 
 void broadcastControlState()
 {
@@ -68,6 +69,7 @@ void broadcastControlState()
     
     doc["setpoint"] = controlState.setpointF;
     doc["valveState"] = controlState.valveState;
+    doc["roomTemp"] = controlState.roomTempF;
 
     String payload;
     serializeJson(doc, payload);
@@ -114,6 +116,7 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
                 client->text(connectionWelcome);
             }
         }
+        // Send current control state (includes latest roomTemp)
         broadcastControlState();
         break;
 
@@ -189,6 +192,9 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
         }
     }
     break;
+
+    default:
+        break;
     }
 }
 

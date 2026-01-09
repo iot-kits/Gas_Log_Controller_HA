@@ -64,6 +64,7 @@ struct ControlState
     Mode mode;              // 0 = OFF, 1 = ON, 2 = THERMOSTAT
     int setpointF;         // Temperature setpoint in Fahrenheit
     String valveState;     // "OFF", "IDLE", or "HEATING"
+    float roomTempF;         // Latest room temperature reading in Fahrenheit
 };
 
 extern ControlState controlState;

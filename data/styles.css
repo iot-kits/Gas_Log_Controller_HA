@@ -132,12 +132,12 @@ body {
     #ffc371 360deg
   );
   filter: drop-shadow(0 0 20px rgba(229, 57, 53, 0.35));
-  padding: 8px;
+  padding: 12px;
 }
 
 .dial-inner {
   position: absolute;
-  inset: 8px;
+  inset: 12px;
   border-radius: 50%;
   background: radial-gradient(
     circle at top,

@@ -1,6 +1,6 @@
 /**
  * @file configuration.h
- * @version 2026.01.03
+ * @version 2026.01.09
  * @author Karl Berger & OpenAI ChatGPT
  * @brief Configuration header file for Gas Log Controller ESP32-C3 project
  *
@@ -70,7 +70,7 @@ static const int HBRIDGE_IN2_PIN = 0; // H-Bridge IN2 pin
 static unsigned long STATUS_CHECK_INTERVAL = 5000;		  // Check status periodically
 static const unsigned long SENSOR_UPDATE_INTERVAL = 5000; // Update sensor readings periocally
 static bool METRIC_UNITS = false;						  // Set to true for metric units, false for imperial
-static const int TEMP_RESOLUTION = 11;					  // DS18b20 temperature sensor resolution (9-12 bits)
+static const int TEMP_RESOLUTION = 12;					  // DS18b20 temperature sensor resolution (9-12 bits)
 static unsigned long timeToOpenValve = 7000;			  // Time to fully open valve in milliseconds
 static unsigned long timeToCloseValve = 7000;			  // Time to fully close valve in milliseconds
 static const float THERMOSTAT_HYSTERESIS = 0.2;			  // Thermostat hysteresis in Fahrenheit degrees

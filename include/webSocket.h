@@ -47,13 +47,14 @@
 #include <Arduino.h>           // Core Arduino library
 #include <ESPAsyncWebServer.h> // https://github.com/ESP32Async/ESPAsyncWebServer
 
-extern AsyncWebServer server; // Global web server instance
-extern AsyncWebSocket ws;     // Global WebSocket server instance
+extern AsyncWebServer server;    // Global web server instance
+extern AsyncWebSocket ws;        // Global WebSocket server instance
 extern bool tempSensorAvailable; // Temperature sensor availability status
 // -----------------------------
 // Unified 3‑State Mode Enum
 // -----------------------------
-enum Mode {
+enum Mode
+{
     MODE_OFF = 0,
     MODE_ON = 1,
     MODE_THERMOSTAT = 2
@@ -61,10 +62,10 @@ enum Mode {
 
 struct ControlState
 {
-    Mode mode;              // 0 = OFF, 1 = ON, 2 = THERMOSTAT
-    int setpointF;         // Temperature setpoint in Fahrenheit
-    String valveState;     // "OFF", "IDLE", or "HEATING"
-    float roomTempF;         // Latest room temperature reading in Fahrenheit
+    Mode mode;         // 0 = OFF, 1 = ON, 2 = THERMOSTAT
+    int setpointF;     // Temperature setpoint in Fahrenheit
+    String valveState; // "OFF", "IDLE", or "HEATING"
+    float roomTempF;   // Latest room temperature reading in Fahrenheit
 };
 
 extern ControlState controlState;
@@ -78,4 +79,4 @@ void updateWebStatus(const String &statusMessage); //! Update system status and 
 void websocketBegin();                             //! Initialize WebSocket and serve UI files
 void websocketCleanup();                           //! Periodically clean up disconnected clients
 
-#endif                                             // WEBSOCKET_H
+#endif // WEBSOCKET_H

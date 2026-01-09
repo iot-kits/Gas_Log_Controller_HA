@@ -1,13 +1,13 @@
 /**
  * @file webSocket.cpp
- * @version 2026.01.08
+ * @version 2026.01.09
  * @author Karl Berger & MS Copilot
  * @brief WebSocket server implementation for Gas Log Controller ESP32
- * 
+ *
  * This module provides WebSocket communication functionality for a gas log controller,
  * enabling real-time bidirectional communication between the ESP32 device and web clients.
  * It handles control state management, JSON message parsing, and web file serving.
- * 
+ *
  * Key Features:
  * - WebSocket server on port 80 with endpoint "/ws"
  * - Real-time control state broadcasting to all connected clients
@@ -15,21 +15,21 @@
  * - Web file serving (HTML, CSS, JS, favicon) from LittleFS
  * - Automatic client cleanup and connection management
  * - Valve state control with string/enum conversion utilities
- * 
+ *
  * Supported WebSocket Messages:
- * - "power": {"type": "power", "value": "ON"|"OFF"}
+
  * - "setpoint": {"type": "setpoint", "value": <integer>}
- * - "mode": {"type": "mode", "value": "automatic"|"manual"}
- * 
+ * - "mode": {"type": "mode", "value": "OFF"|"MANUAL"|"THERMOSTAT"}
+ *
  * Outbound Message Types:
  * - "state": Complete control state broadcast
  * - "status": Status/error messages for user feedback
- * 
+ *
  * Dependencies:
  * - ESPAsyncWebServer library for HTTP/WebSocket server
  * - ArduinoJson library for JSON serialization/deserialization
  * - LittleFS for web file storage and serving
- * 
+ *
  * Global State:
  * - controlState: Main controller state (power, mode, setpoint, valve)
  * - server: AsyncWebServer instance on port 80
@@ -48,25 +48,30 @@ AsyncWebSocket ws("/ws");  // Create WebSocket object at URL /ws
 // mode: 0 = OFF, 1 = MANUAL, 2 = THERMOSTAT
 
 ControlState controlState = {
-    .mode = MODE_OFF,          // Start in OFF mode
-    .setpointF = 70,
-    .valveState = "OFF",
-    .roomTempF = 0.0f}; // Initialize valve state and room temperature
+    .mode = MODE_OFF,    // Start in OFF mode
+    .setpointF = 70,     // Default setpoint temperature
+    .valveState = "OFF", // Initial valve state
+    .roomTempF = 0.0f};  // Initialize valve state and room temperature
 
 void broadcastControlState()
 {
     JsonDocument doc;
     doc["type"] = "state";
-    
+
     // Send mode as string: OFF, MANUAL, or THERMOSTAT
-    if (controlState.mode == 0) {
+    if (controlState.mode == 0)
+    {
         doc["mode"] = "OFF";
-    } else if (controlState.mode == 1) {
+    }
+    else if (controlState.mode == 1)
+    {
         doc["mode"] = "MANUAL";
-    } else {
+    }
+    else
+    {
         doc["mode"] = "THERMOSTAT";
     }
-    
+
     doc["setpoint"] = controlState.setpointF;
     doc["valveState"] = controlState.valveState;
     doc["roomTemp"] = controlState.roomTempF;
@@ -239,7 +244,7 @@ void updateWebStatus(const String &statusMessage)
 {
     // Static local variable to track last status message and prevent duplicates
     static String lastStatusMessage = "";
-    
+
     // Only send if status changed
     if (statusMessage != lastStatusMessage)
     {

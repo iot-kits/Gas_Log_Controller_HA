@@ -117,7 +117,7 @@ function setRoomTempBackground(state) {
   const dialRing = document.querySelector(".dial-ring");
   const dialInner = document.querySelector(".dial-inner");
   const tempState = document.getElementById("temp-state");
-  
+
   if (!dialRing || !dialInner || !tempState) return;
 
   // Update based on state
@@ -141,7 +141,7 @@ function setRoomTempBackground(state) {
       tempState.textContent = "Heating";
       tempState.style.color = "var(--accent-heating)";
       break;
-      
+
     case "IDLE":
       // Blue idle gradient
       dialRing.style.background = `conic-gradient(
@@ -161,7 +161,7 @@ function setRoomTempBackground(state) {
       tempState.textContent = "Idle";
       tempState.style.color = "var(--accent-idle)";
       break;
-      
+
     case "OFF":
       // Gray off state
       dialRing.style.background = `conic-gradient(
@@ -181,7 +181,7 @@ function setRoomTempBackground(state) {
       tempState.textContent = "Off";
       tempState.style.color = "var(--accent-off)";
       break;
-      
+
     default:
       // Default to OFF
       dialRing.style.background = `conic-gradient(

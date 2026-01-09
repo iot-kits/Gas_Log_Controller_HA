@@ -108,31 +108,98 @@ function updateStatusDisplay(statusMessage) {
 function updateTemperatureDisplay(temperature) {
   const tempElement = document.getElementById("room-temp");
   if (tempElement) {
-    tempElement.textContent = `${temperature.toFixed(1)}°F`;
+    tempElement.textContent = temperature.toFixed(1);
   }
 }
 
-// Function to update room temperature background color based on state
+// Function to update dial colors and state based on valve state
 function setRoomTempBackground(state) {
-  const tempElement = document.querySelector(".temp-display");
-  if (!tempElement) return;
+  const dialRing = document.querySelector(".dial-ring");
+  const dialInner = document.querySelector(".dial-inner");
+  const tempState = document.getElementById("temp-state");
+  
+  if (!dialRing || !dialInner || !tempState) return;
 
-  // Remove existing color classes
-  tempElement.classList.remove("temp-heating", "temp-idle", "temp-off");
-
-  // Add appropriate class based on state
+  // Update based on state
   switch (state.toUpperCase()) {
     case "HEATING":
-      tempElement.classList.add("temp-heating");
+      // Red/orange heating gradient
+      dialRing.style.background = `conic-gradient(
+        from 220deg,
+        #ffc371 0deg,
+        #ff7f50 120deg,
+        #e53935 260deg,
+        #ffc371 360deg
+      )`;
+      dialRing.style.filter = "drop-shadow(0 0 20px rgba(229, 57, 53, 0.35))";
+      dialInner.style.background = `radial-gradient(
+        circle at top,
+        #ffffff 0,
+        #eef1f6 60%,
+        #e1e5ee 100%
+      )`;
+      tempState.textContent = "Heating";
+      tempState.style.color = "var(--accent-heating)";
       break;
+      
     case "IDLE":
-      tempElement.classList.add("temp-idle");
+      // Blue idle gradient
+      dialRing.style.background = `conic-gradient(
+        from 220deg,
+        #64b5f6 0deg,
+        #42a5f5 120deg,
+        #1e88e5 260deg,
+        #64b5f6 360deg
+      )`;
+      dialRing.style.filter = "drop-shadow(0 0 20px rgba(30, 136, 229, 0.35))";
+      dialInner.style.background = `radial-gradient(
+        circle at top,
+        #ffffff 0,
+        #e3f2fd 60%,
+        #bbdefb 100%
+      )`;
+      tempState.textContent = "Idle";
+      tempState.style.color = "var(--accent-idle)";
       break;
+      
     case "OFF":
-      tempElement.classList.add("temp-off");
+      // Gray off state
+      dialRing.style.background = `conic-gradient(
+        from 220deg,
+        #bdbdbd 0deg,
+        #9e9e9e 120deg,
+        #757575 260deg,
+        #bdbdbd 360deg
+      )`;
+      dialRing.style.filter = "drop-shadow(0 0 20px rgba(158, 158, 158, 0.25))";
+      dialInner.style.background = `radial-gradient(
+        circle at top,
+        #fafafa 0,
+        #f5f5f5 60%,
+        #eeeeee 100%
+      )`;
+      tempState.textContent = "Off";
+      tempState.style.color = "var(--accent-off)";
       break;
+      
     default:
-      tempElement.classList.add("temp-off");
+      // Default to OFF
+      dialRing.style.background = `conic-gradient(
+        from 220deg,
+        #bdbdbd 0deg,
+        #9e9e9e 120deg,
+        #757575 260deg,
+        #bdbdbd 360deg
+      )`;
+      dialRing.style.filter = "drop-shadow(0 0 20px rgba(158, 158, 158, 0.25))";
+      dialInner.style.background = `radial-gradient(
+        circle at top,
+        #fafafa 0,
+        #f5f5f5 60%,
+        #eeeeee 100%
+      )`;
+      tempState.textContent = "Off";
+      tempState.style.color = "var(--accent-off)";
   }
 }
 

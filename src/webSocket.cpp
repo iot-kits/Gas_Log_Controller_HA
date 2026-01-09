@@ -48,7 +48,7 @@ AsyncWebSocket ws("/ws");  // Create WebSocket object at URL /ws
 // mode: 0 = OFF, 1 = MANUAL, 2 = THERMOSTAT
 
 ControlState controlState = {
-    .mode = 0,          // Start in OFF mode
+    .mode = MODE_OFF,          // Start in OFF mode
     .setpointF = 70,
     .valveState = "OFF"}; // Initialize valve state
 
@@ -153,14 +153,14 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
 
             if (valueUpper == "OFF")
             {
-                controlState.mode = 0;
+                controlState.mode = MODE_OFF;
                 Serial.println("Mode OFF command received");
                 setRoomTempColor("OFF");
                 updateWebStatus("System Off");
             }
             else if (valueUpper == "MANUAL")
             {
-                controlState.mode = 1;
+                controlState.mode = MODE_ON;
                 Serial.println("Mode MANUAL command received");
                 setRoomTempColor("HEATING");
                 updateWebStatus("Manual Mode: Heating");
@@ -170,12 +170,12 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
                 if (!tempSensorAvailable)
                 {
                     updateWebStatus("Error: Thermostat mode requires temperature sensor");
-                    controlState.mode = 0; // Force to OFF if no sensor
+                    controlState.mode = MODE_OFF; // Force to OFF if no sensor
                     setRoomTempColor("OFF");
                 }
                 else
                 {
-                    controlState.mode = 2;
+                    controlState.mode = MODE_THERMOSTAT;
                     Serial.println("Mode THERMOSTAT command received");
                     setRoomTempColor("IDLE");
                     updateWebStatus("Thermostat Mode: Idle");

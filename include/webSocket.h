@@ -50,10 +50,18 @@
 extern AsyncWebServer server; // Global web server instance
 extern AsyncWebSocket ws;     // Global WebSocket server instance
 extern bool tempSensorAvailable; // Temperature sensor availability status
+// -----------------------------
+// Unified 3‑State Mode Enum
+// -----------------------------
+enum Mode {
+    MODE_OFF = 0,
+    MODE_ON = 1,
+    MODE_THERMOSTAT = 2
+};
 
 struct ControlState
 {
-    int mode;              // 0 = OFF, 1 = MANUAL, 2 = THERMOSTAT
+    Mode mode;              // 0 = OFF, 1 = ON, 2 = THERMOSTAT
     int setpointF;         // Temperature setpoint in Fahrenheit
     String valveState;     // "OFF", "IDLE", or "HEATING"
 };

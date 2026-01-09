@@ -30,7 +30,7 @@ void setup()
 
   if (!tempSensorAvailable)
   {
-    controlState.mode = 0; // Force OFF mode when no temperature sensor
+    controlState.mode = MODE_OFF; // Force OFF mode when no temperature sensor
     updateWebStatus("Warning: Temperature sensor not detected - Thermostat mode disabled");
   }
 }
@@ -62,38 +62,29 @@ void loop()
   }
 
   // Handle three-state mode system
-  switch (controlState.mode)
-  {
-  case 0: // OFF mode
-    valveOpenRequest(false);
+switch (controlState.mode) {
+
+  case MODE_OFF:
     setRoomTempColor("OFF");
-    updateWebStatus("System Off");
+    valveOpenRequest(false);
     break;
 
-  case 1: // MANUAL mode
-    valveOpenRequest(true);
+  case MODE_ON:  // manual
     setRoomTempColor("HEATING");
-    updateWebStatus("Manual Mode: Heating");
+    valveOpenRequest(true);
+    // if (controlState.manualValveOpen) {
+    //   setRoomTempColor("HEATING");
+    // } 
+    // valveOpenRequest(controlState.manualValveOpen);
     break;
 
-  case 2: // THERMOSTAT mode
-    // Run periodic status check for thermostat mode
-    if (millis() - lastStatusCheck > STATUS_CHECK_INTERVAL)
-    {
-      Serial.println("THERMOSTAT mode active.");
-      if (thermostatHeatCall(tempF, controlState.setpointF))
-      {
-        setRoomTempColor("HEATING");
-        updateWebStatus("Thermostat: Heating");
-        valveOpenRequest(true);
-      }
-      else
-      {
-        setRoomTempColor("IDLE");
-        updateWebStatus("Thermostat: Idle");
-        valveOpenRequest(false);
-      }
-      lastStatusCheck = millis();
+  case MODE_THERMOSTAT:
+    if (thermostatHeatCall(tempF, controlState.setpointF)) {
+      setRoomTempColor("HEATING");
+      valveOpenRequest(true);
+    } else {
+      setRoomTempColor("IDLE");
+      valveOpenRequest(false);
     }
     break;
 

@@ -38,7 +38,7 @@ void setup()
   }
 
   // Configure fauxmo (Alexa emulation) to use our existing AsyncWebServer
-  fauxmo.createServer(false);             // Use external webserver to avoid port conflict
+  fauxmo.createServer(false);            // Use external webserver to avoid port conflict
   fauxmo.setPort(80);                    // Required for Gen3 (ESP32-C3)
   fauxmo.enable(true);                   // Enable fauxmoESP
   fauxmo.addDevice("Gas Log Fireplace"); // Name for Alexa discovery
@@ -116,10 +116,12 @@ void loop()
     if (thermostatHeatCall(tempF, controlState.setpointF))
     {
       setRoomTempColor("HEATING");
+      updateWebStatus("Heating");
       valveOpenRequest(true);
     }
     else
     {
+      updateWebStatus("Idle");
       setRoomTempColor("IDLE");
       valveOpenRequest(false);
     }

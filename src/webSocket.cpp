@@ -39,14 +39,10 @@
 #include <ESPAsyncWebServer.h> // for AsyncWebServer and AsyncWebSocket
 #include <LittleFS.h>          // for index.html, styles.css, and script.js
 #include <ArduinoJson.h>       // for JSON formatting
-#include <fauxmoESP.h>         // for Alexa emulation (sync state)
 
 //! Instantiate WebSocket server on port 80
 AsyncWebServer server(80); // Create AsyncWebServer object on port 80
 AsyncWebSocket ws("/ws");  // Create WebSocket object at URL /ws
-
-// Externally-defined fauxmo instance (declared in main.cpp)
-extern fauxmoESP fauxmo;
 
 // Global control state for the gas log controller
 // mode: 0 = OFF, 1 = MANUAL, 2 = THERMOSTAT
@@ -79,10 +75,6 @@ void broadcastControlState()
     doc["setpoint"] = controlState.setpointF;
     doc["valveState"] = controlState.valveState;
     doc["roomTemp"] = controlState.roomTempF;
-
-    // Sync Alexa (fauxmo) reported state: ON when manual, OFF otherwise
-    bool alexaState = (controlState.mode == MODE_ON);
-    fauxmo.setState("Gas Log Fireplace", alexaState, alexaState ? 255 : 0);
 
     String payload;
     serializeJson(doc, payload);
@@ -231,18 +223,6 @@ void websocketBegin()
 
     server.on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest *request)
               { request->send(LittleFS, "/favicon.ico", "image/x-icon"); });
-
-    // Forward request bodies and not-found requests to fauxmo when appropriate
-    server.onRequestBody([](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
-        if (fauxmo.process(request->client(), request->method() == HTTP_GET, request->url(), String((char *)data))) return;
-        // Otherwise other body requests can be handled here
-    });
-
-    server.onNotFound([](AsyncWebServerRequest *request) {
-        String body = (request->hasParam("body", true)) ? request->getParam("body", true)->value() : String();
-        if (fauxmo.process(request->client(), request->method() == HTTP_GET, request->url(), body)) return;
-        // Otherwise handle not-found request here
-    });
 
     ws.onEvent(onWsEvent);
     server.addHandler(&ws);

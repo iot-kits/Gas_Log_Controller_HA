@@ -57,7 +57,7 @@ bool initSensor()
     }
 
     tempSensorInitSuccess = true;
-    // updateWebStatus("Temperature sensor initialized successfully");
+    updateWebStatus("Sensor OK");
     sensors.setResolution(roomThermometer, TEMP_RESOLUTION);
 
     return true;

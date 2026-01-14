@@ -1,6 +1,6 @@
 /**
  * @file webSocket.cpp
- * @version 2026.01.09
+ * @version 2026.01.14
  * @author Karl Berger & MS Copilot
  * @brief WebSocket server implementation for Gas Log Controller ESP32
  *
@@ -121,7 +121,7 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
         {
             JsonDocument doc;
             doc["type"] = "status";
-            doc["message"] = "Connected to Gas Log Controller";
+            doc["message"] = "Connected";
             String connectionWelcome;
             serializeJson(doc, connectionWelcome);
             if (client)
@@ -179,13 +179,13 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
                 controlState.mode = MODE_ON;
                 Serial.println("Mode MANUAL command received");
                 setRoomTempColor("HEATING");
-                updateWebStatus("Manual Mode: Heating");
+                updateWebStatus("Heating");
             }
             else if (valueUpper == "THERMOSTAT")
             {
                 if (!tempSensorAvailable)
                 {
-                    updateWebStatus("Error: Thermostat mode requires temperature sensor");
+                    updateWebStatus("Sensor failed");
                     controlState.mode = MODE_OFF; // Force to OFF if no sensor
                     setRoomTempColor("OFF");
                 }
@@ -194,7 +194,7 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
                     controlState.mode = MODE_THERMOSTAT;
                     Serial.println("Mode THERMOSTAT command received");
                     setRoomTempColor("IDLE");
-                    updateWebStatus("Thermostat Mode: Idle");
+                    updateWebStatus("Idle");
                 }
             }
             broadcastControlState();

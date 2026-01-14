@@ -1,6 +1,6 @@
 /**
  * @file ds18b20_sensor.cpp
- * @version 2026.01.08
+ * @version 2026.01.14
  * @author Karl Berger & MS Copilot
  * @brief DS18B20 temperature sensor interface implementation
  *
@@ -45,19 +45,19 @@ bool initSensor()
     if (deviceCount == 0)
     {
         tempSensorInitSuccess = false;
-        updateWebStatus("Error: No DS18B20 devices found");
+        updateWebStatus("Sensor failed");
         return false;
     }
 
     if (!sensors.getAddress(roomThermometer, 0))
     {
         tempSensorInitSuccess = false;        
-        updateWebStatus("Error: Unable to find address for temperature sensor");
+        updateWebStatus("Sensor failed");
         return false;
     }
 
     tempSensorInitSuccess = true;
-    updateWebStatus("Temperature sensor initialized successfully");
+    // updateWebStatus("Temperature sensor initialized successfully");
     sensors.setResolution(roomThermometer, TEMP_RESOLUTION);
 
     return true;
@@ -80,7 +80,7 @@ float readTemperature()
 {   
     if (!tempSensorInitSuccess)
     {
-        updateWebStatus("Error: Temperature sensor not initialized");
+        updateWebStatus("Sensor failed");
         return NAN;
     }
 
@@ -100,7 +100,7 @@ float readTemperature()
     if (tempC <= DEVICE_DISCONNECTED_C)
     {
         Serial.println("Error: DS18B20 disconnected");
-        updateWebStatus("Error: Temperature sensor disconnected");
+        updateWebStatus("Sensor failed");
         return NAN;
     }
 

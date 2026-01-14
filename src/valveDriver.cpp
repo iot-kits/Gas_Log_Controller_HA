@@ -1,5 +1,7 @@
 /*
-  Gas Fireplace Valve Controller
+  @file Gas Fireplace Valve Controller
+  @author Karl Berger
+  @version 2026.01.14 
 
   This code controls a gas valve that requires timed pulses of
   positive or negative voltage to open and close.
@@ -157,7 +159,7 @@ void valveDriverBegin()
  * previous states and prevent duplicate operations.
  *
  * @note Requires global state variables: isHeatCalled, isValveOpen
- * @note Calls helper functions: openValve(), closeValve(), updateWebStatus()
+ * @note Calls helper functions: openValve(), closeValve()
  */
 
 void valveOpenRequest(bool openValveRequest)

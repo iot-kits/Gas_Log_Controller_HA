@@ -34,7 +34,7 @@ void setup()
   if (!tempSensorAvailable)
   {
     controlState.mode = MODE_OFF; // Force OFF mode when no temperature sensor
-    updateWebStatus("Warning: Temperature sensor not detected - Thermostat mode disabled");
+    updateWebStatus("Sensor failed");
   }
 
   // Configure fauxmo (Alexa emulation) to use our existing AsyncWebServer
@@ -57,7 +57,7 @@ void setup()
         controlState.mode = MODE_ON;
         Serial.println("Alexa: Mode MANUAL");
         setRoomTempColor("HEATING");
-        updateWebStatus("Manual Mode: Heating (Alexa)");
+        updateWebStatus("Heating (Alexa)");
       } else {
         // Alexa OFF → Off mode (valve closed)
         controlState.mode = MODE_OFF;
@@ -129,7 +129,7 @@ void loop()
     // Safety fallback - turn off if mode is invalid
     setRoomTempColor("OFF");
     valveOpenRequest(false);
-    updateWebStatus("Error: Invalid mode");
+    updateWebStatus("Invalid mode");
     break;
   }
 }

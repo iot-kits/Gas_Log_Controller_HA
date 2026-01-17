@@ -17,7 +17,7 @@ Three radio buttons set the operating mode of the controller. The gas valve is c
 | **On**         | Valve open               | Heating       |
 
 ## Schematic
-https://github.com/W4KRL/Gas_Log_Controller/blob/main/documents/images/ESP32-C3_Gas_Log_Controller.bmp
+<img width="3060" height="2310" alt="image" src="https://github.com/user-attachments/assets/441cfbeb-8972-468a-a39f-b63efa3b9986" />
 
 ## Planned Enhancements
 

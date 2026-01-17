@@ -1,6 +1,6 @@
 /**
  * @file configuration.h
- * @version 2026.01.09
+ * @version 2026.01.16
  * @author Karl Berger & OpenAI ChatGPT
  * @brief Configuration header file for Gas Log Controller ESP32-C3 project
  *
@@ -12,13 +12,8 @@
  * - WIFI_SSID: Network name for WiFi connection
  * - WIFI_PASSWORD: WiFi network password
  *
- * @section network_config Network Configuration
- * - LOCAL_IP: Static IP address assignment (192.168.0.50)
- * - GATEWAY: Default gateway IP address
- * - SUBNET: Subnet mask for the network
- *
  * @section ota_config Over-The-Air Update Configuration
- * - OTA_HOSTNAME: Device hostname for OTA identification
+ * - OTA_HOSTNAME: Device hostname for OTA identification and mDNS resolution
  * - OTA_PASSWORD: Security password for OTA updates
  *
  * @section gpio_config GPIO Pin Assignments
@@ -36,26 +31,23 @@
  * - THERMOSTAT_HYSTERESIS: Temperature control deadband (0.2°F)
  *
  * @note This configuration is specifically designed for ESP32-C3 SuperMini hardware
- * @note IP address is set within DHCP reservation range (.100-.249)
+ * @note IP addresses are normally provided by your network's DHCP server
  * @warning Ensure WiFi credentials are properly secured in production environments
  */
 #ifndef CONFIGURATION_H
 #define CONFIGURATION_H
 
 #include <Arduino.h>   // for Arduino core
-#include <IPAddress.h> // for IPAddress
 
 // WiFi Credentials
 static const char *WIFI_SSID = "DCMNET";
 static const char *WIFI_PASSWORD = "0F1A2D3E4D5G6L7O8R9Y";
 
-// Static IP Settings
-static const IPAddress LOCAL_IP(192, 168, 0, 50); // DHCP reservation range is .100 to .249
-static const IPAddress GATEWAY(192, 168, 0, 1);
-static const IPAddress SUBNET(255, 255, 255, 0);
+// Network configuration: IP address is assigned via DHCP by default.
+// If you require a fixed address, reserve a DHCP address on the router.
 
 // OTA Configuration
-static const char *OTA_HOSTNAME = "GasLogController"; // Hostname for OTA identification
+static const char *OTA_HOSTNAME = "GasLogController"; // Hostname for OTA and local hostname resolution
 static const char *OTA_PASSWORD = "GasLog2025";		  // Password for OTA security
 
 // GPIO Pin Assignments

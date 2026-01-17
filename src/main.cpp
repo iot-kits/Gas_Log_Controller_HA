@@ -1,6 +1,5 @@
 //! Main application file for Smart Thermostat
 //! moved to github 2025.12.30
-//! Uses fauxmoESP for Alexa emulation 2026.01.14
 
 #include <Arduino.h>        // for Arduino core
 #include "ArduinoOTA.h"     // for ArduinoOTA.handle() in loop()
@@ -13,17 +12,25 @@
 #include "wifiConnection.h" // set up local WiFi
 #include <Wire.h>           // I2C library
 
+// Status management
 unsigned long lastStatusCheck = 0;      // Timestamp for last status check
 unsigned long lastTempSensorUpdate = 0; // Timestamp for last temperature sensor update
 bool tempSensorAvailable = false;       // Track if sensor initialized successfully
 
 void setup()
 {
-  Serial.begin(115200);               // Initialize serial communication at 115200 baud
+  Serial.begin(115200); // Initialize serial communication at 115200 baud
+  // Wait until Serial is ready (especially important on ESP32-C3)
+  unsigned long serialStart = millis();
+  const unsigned long serialTimeout = 2000; // ms
+  while (!Serial && (millis() - serialStart) < serialTimeout) {
+    delay(10);
+  }
+  // Optional: give a short time for host to attach
+  delay(200);
+  Serial.println("Serial is ready!");
   Wire.begin(SDA_PIN, SCL_PIN);       // Begin I2C on pins assigned in configuration.h
-  wifiBegin();                        // Initialize WiFi
-  wifiConnect();                      // Connect to WiFi
-  otaBegin();                         // Initialize Over-The-Air update service
+  wifiBegin(true);                    // Initialize WiFi and wait for connection (starts mDNS + OTA)
   websocketBegin();                   // Initialize webSocket for bi-directional communication with web UI
   valveDriverBegin();                 // Initialize valve driver pins and state
   tempSensorAvailable = initSensor(); // Initialize temperature sensor and check if successful
@@ -31,17 +38,19 @@ void setup()
   if (!tempSensorAvailable)
   {
     controlState.mode = MODE_OFF; // Force OFF mode when no temperature sensor
-    updateWebStatus("Sensor failed");
+    updateWebStatus("Warning: Temperature sensor not detected - Thermostat mode disabled");
   }
-
 }
 
 void loop()
 {
   static float tempF = NAN; // Initialize to NAN to indicate no valid reading yet
-  wifiConnect();            // Automatically reconnects if disconnected
-  ArduinoOTA.handle();      // Handle OTA updates
-  websocketCleanup();       // Perform web client cleanup
+  if (WiFi.status() != WL_CONNECTED)
+  {
+    WiFi.reconnect(); // rely on auto-reconnect; attempt a reconnect if disconnected
+  }
+  ArduinoOTA.handle(); // Handle OTA updates
+  websocketCleanup();  // Perform web client cleanup
 
   // Non-blocking periodic sensor update
   if (millis() - lastTempSensorUpdate > SENSOR_UPDATE_INTERVAL)
@@ -56,7 +65,7 @@ void loop()
       // Update live room temperature in control state so new WS clients see it immediately
       controlState.roomTempF = tempF;
       char buffer[64];
-      snprintf(buffer, sizeof(buffer), "{\"type\":\"temperature\",\"value\":%.1f}", tempF);
+      snprintf(buffer, sizeof(buffer), "{\"type\": \"temperature\", \"value\": %.1f}", tempF);
       String tempMessage = String(buffer);
       notifyAllClients(tempMessage);
     }
@@ -82,12 +91,10 @@ void loop()
     if (thermostatHeatCall(tempF, controlState.setpointF))
     {
       setRoomTempColor("HEATING");
-      updateWebStatus("Heating");
       valveOpenRequest(true);
     }
     else
     {
-      updateWebStatus("Idle");
       setRoomTempColor("IDLE");
       valveOpenRequest(false);
     }
@@ -97,7 +104,7 @@ void loop()
     // Safety fallback - turn off if mode is invalid
     setRoomTempColor("OFF");
     valveOpenRequest(false);
-    updateWebStatus("Invalid mode");
+    updateWebStatus("Error: Invalid mode");
     break;
   }
 }

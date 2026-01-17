@@ -1,7 +1,7 @@
 /**
  * @file thermostat.h
- * @version 2026.01.08
- * @author Karl Berger & MS Copilot
+ * @version 2026.01.17
+ * @author Karl Berger
  * @brief Thermostat control interface for heating system management.
  * 
  * This header file provides the interface for thermostat functionality,
@@ -16,8 +16,8 @@
  * Compares the current room temperature against the desired setpoint temperature
  * to determine whether the heating system should be called to activate.
  * 
- * @param roomTemp The current room temperature in degrees (Celsius or Fahrenheit).
- * @param setpoint The desired target temperature in degrees (same unit as roomTemp).
+ * @param roomTemp The current room temperature in degrees Fahrenheit.
+ * @param setpoint The desired target temperature in degrees Fahrenheit.
  * @return true if heating should be activated (roomTemp < setpoint - THERMOSTAT_HYSTERESIS).
  * @return false if heating should remain off (roomTemp >= setpoint + THERMOSTAT_HYSTERESIS).
  */

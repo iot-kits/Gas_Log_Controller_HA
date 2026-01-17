@@ -3,14 +3,14 @@
  * @file wifiConnection.cpp
  * @brief Implements Wi-Fi connection and OTA update functionality for the magloop-controller project.
  *
- * This file provides functions to initialize Wi-Fi connectivity, configure static IP,
- * handle built-in LED status indication, and enable Arduino OTA (Over-The-Air) updates.
+ * This file provides functions to initialize Wi-Fi connectivity, handle built-in LED
+ * status indication, and enable Arduino OTA (Over-The-Air) updates.
  * It uses the ESP32 WiFi and ArduinoOTA libraries, and relies on configuration parameters
  * defined in "configuration.h" for SSID, password, and network settings.
  *
  * Features:
  * - Wi-Fi connection with status LED feedback.
- * - Static IP configuration.
+ * - DHCP IP assignment (default).
  * - Built-in LED control and toggling.
  * - Arduino OTA update support with progress and error reporting.
  *
@@ -27,6 +27,7 @@
 #include <Arduino.h>		// for PlatformIO
 #include <WiFi.h>			// for WiFi
 #include <ArduinoOTA.h>		// for OTA updates
+#include <ESPmDNS.h>		// for mDNS responder
 #include "configuration.h"	// for SSID, password, static IP
 
 /**
@@ -65,11 +66,37 @@ void otaBegin()
 					   else if (error == OTA_END_ERROR) Serial.println("End Failed"); });
 	Serial.println("OTA Ready");
 	Serial.printf("OTA Hostname: %s\n", OTA_HOSTNAME);
-	Serial.printf("OTA IP Address: %s\n", LOCAL_IP.toString().c_str());
+	// Print the actual assigned IP (may be DHCP); don't print the static
+	// `LOCAL_IP` unconditionally because that can be misleading when
+	// `USE_STATIC_IP == false` and the device is using DHCP.
+	Serial.printf("OTA IP Address: %s\n", WiFi.localIP().toString().c_str());
 } // otaBegin()
 
 //! Global variables
 static bool ledBuiltIn = LOW; // Built-in LED LOW = OFF, HIGH = ON
+// Track whether mDNS/OTA services have been started for the current
+// network interface. This prevents re-initializing services on repeated
+// GOT_IP events.
+static bool networkServicesStarted = false;
+
+// WiFi GOT_IP event handler: start mDNS and OTA after obtaining an IP.
+static void onGotIP(WiFiEvent_t event, WiFiEventInfo_t info)
+{
+	Serial.printf("WiFi event: GOT IP %s\n", WiFi.localIP().toString().c_str());
+	if (!networkServicesStarted) {
+		if (MDNS.begin(OTA_HOSTNAME)) {
+			Serial.println("mDNS responder started (GOT_IP)");
+			MDNS.addService("http", "tcp", 80);
+			MDNS.addService("arduino-ota", "tcp", 3232);
+		} else {
+			Serial.println("mDNS responder failed to start (continuing without mDNS)");
+		}
+		otaBegin();
+		networkServicesStarted = true;
+	} else {
+		Serial.println("Network services already started; skipping init");
+	}
+}
 
 /**
  * @brief Sets the state of the built-in LED.
@@ -111,28 +138,55 @@ void toggleLED_PIN()
  * @note Requires WIFI_SSID and WIFI_PASSWORD to be defined.
  * @note Assumes Serial and WiFi have been initialized.
  */
-void wifiConnect()
+void wifiBegin(bool waitForConnect)
 {
-	// Only attempt connection if not already connected
-	if (WiFi.status() == WL_CONNECTED)
-	{
-		return; // Already connected, nothing to do
-	}
+	// Configure onboard LED pin
+	pinMode(LED_PIN, OUTPUT);    // Set LED_PIN as output
+	digitalWrite(LED_PIN, LOW);  // Start with LED off
 
-	Serial.print("Connecting to WiFi");
+	WiFi.mode(WIFI_STA);
+	WiFi.persistent(false);
+	WiFi.setAutoReconnect(true);
+	WiFi.setSleep(false);
+	Serial.printf("\n%s %s\n", "Connecting to", WIFI_SSID);
+
+	// Register GOT_IP event handler so mDNS/OTA are started on reconnects
+	WiFi.onEvent(onGotIP, ARDUINO_EVENT_WIFI_STA_GOT_IP);
+
+	// Start connecting (non-blocking). If caller wants to wait, perform
+	// the blocking loop below to provide LED feedback and ensure IP is
+	// assigned before proceeding.
 	WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-	while (WiFi.status() != WL_CONNECTED)
-	{
-		toggleLED_PIN();
-		delay(250);
-		yield();
-		Serial.print(".");
-	}
-	setLED_PIN(LOW); // Turn on the LED when connected
-	// Serial.printf("\n%s: %s\n", "Connected to IP Address", WiFi.localIP().toString());
-	Serial.printf("\n%s: %s\n", "Connected to IP Address", WiFi.localIP().toString().c_str());
 
-} // wifiConnect()
+	if (waitForConnect) {
+		Serial.print("Connecting to WiFi");
+		while (WiFi.status() != WL_CONNECTED) {
+			toggleLED_PIN();
+			delay(250);
+			yield();
+			Serial.print(".");
+		}
+		setLED_PIN(LOW); // Turn LED steady when connected
+		Serial.println();
+		Serial.printf("Connected to WiFi SSID: %s\n", WIFI_SSID);
+		Serial.printf("Assigned IP: %s\n", WiFi.localIP().toString().c_str());
+		Serial.printf("RSSI: %d dBm\n", WiFi.RSSI());
+		Serial.printf("MAC Address: %s\n", WiFi.macAddress().c_str());
+
+		// Start mDNS responder only after we have an IP to advertise
+		if (MDNS.begin(OTA_HOSTNAME)) {
+			Serial.println("mDNS responder started");
+			MDNS.addService("http", "tcp", 80);
+			MDNS.addService("arduino-ota", "tcp", 3232);
+		} else {
+			Serial.println("mDNS responder failed to start (continuing without mDNS)");
+		}
+
+		// Start OTA now that network is up
+		otaBegin();
+		networkServicesStarted = true;
+	}
+}
 
 /**
  * @brief Initializes the WiFi connection with specific settings.
@@ -140,25 +194,7 @@ void wifiConnect()
  * This function configures the onboard LED as an output and turns it off.
  * It sets the WiFi mode to station (WIFI_STA), disables WiFi persistence,
  * enables automatic reconnection, and disables WiFi sleep mode.
- * It then attempts to configure the WiFi with a static IP address using
- * the predefined LOCAL_IP, GATEWAY, and SUBNET values.
- * If static IP configuration fails, an error message is printed to Serial.
+ * It uses DHCP for IP assignment by default; any fixed-address requirements
+ * should be handled by a DHCP reservation on the router.
  */
-void wifiBegin()
-{
-	// Configure onboard LED pin
-	pinMode(LED_PIN, OUTPUT);	// Set LED_PIN as output
-	digitalWrite(LED_PIN, LOW); // Start with LED off
-
-	WiFi.mode(WIFI_STA);
-	WiFi.persistent(false);
-	WiFi.setAutoReconnect(true);
-	WiFi.setSleep(false);
-	Serial.printf("\n%s %s\n", "Connecting to", WIFI_SSID);
-	// Set static IP configuration
-	if (!WiFi.config(LOCAL_IP, GATEWAY, SUBNET))
-	{
-		Serial.println("Static IP Configuration Failed!");
-		return;
-	}
-} // wifiBegin()
+// (removed old no-arg wifiBegin; use wifiBegin(bool) instead)

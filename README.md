@@ -3,8 +3,7 @@
 The Gas Log Controller uses an ESP32-C3, a DS20b18 temperature sensor, and a DRV8877 H-Bridge to thermostatically control the gas valve of fireplace logs through a websocket user interface. It was developed on the PlaformIO extension of VS Code as an Arduino application. The software can be updated by direct USB connection to the ESP32-C3 or wirelessly over a local Wi-Fi connection. Multicast DNS (mDNS) permits access to the controller with a friendly name.
 
 ## User Interface
-
-<img width="314" height="427" alt="Gas_Log_UI" src="https://github.com/user-attachments/assets/eaabd6fc-885e-4523-b774-e6840037d7d5" />
+<img width="374" height="491" alt="Gas_Log_UI" src="https://github.com/user-attachments/assets/63379475-9757-4ae5-9ebe-193f17fe546c" />
 
 ### Mode: On | Thermostat | Off
 
@@ -18,9 +17,7 @@ Three radio buttons set the operating mode of the controller. The gas valve is c
 | **On**         | Valve open               | Heating       |
 
 ## Schematic
-
-![alt text](image.png)
-
+https://github.com/W4KRL/Gas_Log_Controller/blob/main/documents/images/ESP32-C3_Gas_Log_Controller.bmp
 
 ## Planned Enhancements
 

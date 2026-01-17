@@ -1,7 +1,7 @@
 /**
  * @file webSocket.cpp
- * @version 2026.01.14
- * @author Karl Berger & MS Copilot
+ * @version 2026.01.16
+ * @author Karl Berger
  * @brief WebSocket server implementation for Gas Log Controller ESP32
  *
  * This module provides WebSocket communication functionality for a gas log controller,
@@ -103,8 +103,8 @@ void notifyAllClients(const String &message)
 }
 
 //! WebSocket event handler
-void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
-{
+void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *
+data, size_t len)                                                                                           {
     switch (type)
     {
     case WS_EVT_CONNECT:
@@ -177,7 +177,7 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
             {
                 if (!tempSensorAvailable)
                 {
-                    updateWebStatus("Sensor failed");
+                    updateWebStatus("Sensor failure");
                     controlState.mode = MODE_OFF; // Force to OFF if no sensor
                     setRoomTempColor("OFF");
                 }
@@ -186,7 +186,7 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
                     controlState.mode = MODE_THERMOSTAT;
                     Serial.println("Mode THERMOSTAT command received");
                     setRoomTempColor("IDLE");
-                    updateWebStatus("Idle");
+                    updateWebStatus("Operating"); // Normal operation
                 }
             }
             broadcastControlState();
@@ -211,6 +211,9 @@ void websocketBegin()
         Serial.println("Error mounting LittleFS");
         return;
     }
+
+    Serial.println("LittleFS mounted OK");
+    Serial.println("index.html exists? " + String(LittleFS.exists("/index.html")));
 
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
               { request->send(LittleFS, "/index.html", "text/html"); });

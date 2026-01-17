@@ -18,14 +18,18 @@ Three radio buttons set the operating mode of the controller. The gas valve is c
 
 ## Schematic
 <img width="3060" height="2310" alt="image" src="https://github.com/user-attachments/assets/441cfbeb-8972-468a-a39f-b63efa3b9986" />
+External power of 7 to 8 Vdc is supplied to the Vm terminals of the H-bridge. This voltage is direcly used by teh H-bridge to energize the gas valve. Teh ESP32-C3 is supplied with 5 Vdc from a buck converter receieving power from the external source connected to Vm.
+
+The DS18b20 temperature sensor is supplied with 3.3 Vdc from the ESP32-C3. Data is exchanged with the ESP32-C3 over a OneWire bus. Resistor R1 provides the required pull up voltage.
+
+Two GPIO pins on the ESP32-C3 provide digital signals to the H-bridge. Red and blue LEDs connected to teh GPIO lines display the logic signals sent to teh H-bridge as diagnostic indications.
 
 ## Planned Enhancements
 
-~~1. Set a color for the room temperature display background: HEATING | IDLE | OFF ~~
-2. Limit operation to 4 hours. This limit applies as long as the Power is set to ON regardless of the valve open/closed state. Reset the limit when the Power is manually cycled OFF.
-3. Force Power OFF at a preset clock time, say between midnight and 8 AM.
-4. Rebuild the controller with minimum components and smallest size. Use a skeleton sandwich frame.
-5. Consider three installation options: 
+1. Limit operation to 4 hours. This limit applies as long as the Power is set to ON regardless of the valve open/closed state. Reset the limit when the Power is manually cycled OFF.
+2. Force Power OFF at a preset clock time, say between midnight and 8 AM.
+3. Rebuild the controller with minimum components and smallest size. Use a skeleton sandwich frame.
+4. Consider three installation options: 
    A. Device external to the fireplace with the temperature sensor mounted on the board, 
    B. Device inside the fireplace with a wired external temperature sensor, 
    C. Device inside the fireplace with a battery-powered Bluetooth sensor external 

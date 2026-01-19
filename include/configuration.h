@@ -37,7 +37,7 @@
 #ifndef CONFIGURATION_H
 #define CONFIGURATION_H
 
-#include <Arduino.h>   // for Arduino core
+#include <Arduino.h> // for Arduino core
 
 // WiFi Credentials
 static const char *WIFI_SSID = "DCMNET";
@@ -51,20 +51,23 @@ static const char *OTA_HOSTNAME = "GasLogController"; // Hostname for OTA and lo
 static const char *OTA_PASSWORD = "GasLog2025";		  // Password for OTA security
 
 // GPIO Pin Assignments
-static const int LED_PIN = 8;		  // Built-in LED GPIO for ESP32-C3 SuperMini
-static const int ONE_WIRE_BUS = 6;	  // 1-Wire Bus for DS18b20 temperature sensor
-static const int SDA_PIN = 3;		  // I2C SDA pin
-static const int SCL_PIN = 2;		  // I2C SCL pin
-static const int HBRIDGE_IN1_PIN = 1; // H-Bridge IN1 pin
-static const int HBRIDGE_IN2_PIN = 0; // H-Bridge IN2 pin
+static const int LED_PIN = 8;			// Built-in LED GPIO for ESP32-C3 SuperMini
+static const int ONE_WIRE_BUS = 6;		// 1-Wire Bus for DS18b20 temperature sensor
+static const int SDA_PIN = 3;			// I2C SDA pin
+static const int SCL_PIN = 2;			// I2C SCL pin
+static const int HBRIDGE_IN1_PIN = 1;	// H-Bridge IN1 pin
+static const int HBRIDGE_IN2_PIN = 0;	// H-Bridge IN2 pin
+static const int PIN_VOLTAGE_SENSE = 4; // Voltage sense pin (ADC)
 
 // Update intervals & settings
 static unsigned long STATUS_CHECK_INTERVAL = 5000;		  // Check status periodically
 static const unsigned long SENSOR_UPDATE_INTERVAL = 5000; // Update sensor readings periocally
 static bool METRIC_UNITS = false;						  // Set to true for metric units, false for imperial
 static const int TEMP_RESOLUTION = 12;					  // DS18b20 temperature sensor resolution (9-12 bits)
+static const float THERMOSTAT_HYSTERESIS = 0.2;			  // Thermostat hysteresis in Fahrenheit degrees
+static const float valveVoltage = 6.5;					  // Voltage to apply to valve motor
+static const float voltageDividerRatio = 15.24;			  // Voltage divider ratio for power supply measurement
 static unsigned long timeToOpenValve = 7000;			  // Time to fully open valve in milliseconds
 static unsigned long timeToCloseValve = 7000;			  // Time to fully close valve in milliseconds
-static const float THERMOSTAT_HYSTERESIS = 0.2;			  // Thermostat hysteresis in Fahrenheit degrees
 
 #endif // CONFIGURATION_H

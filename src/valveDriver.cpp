@@ -1,7 +1,7 @@
 /*
   @file Gas Fireplace Valve Controller
   @author Karl Berger
-  @version 2026.01.14 
+  @version 2026.01.19
 
   This code controls a gas valve that requires timed pulses of
   positive or negative voltage to open and close.
@@ -15,10 +15,10 @@
      (DRV8871 VM connected to valve power supply)
 
   2. DRV8871 Logic:
-    - IN1=L, IN2=L: Idle (de-energized)
-    - IN1=L, IN2=H: Forward (Open Valve)
-    - IN1=H, IN2=L: Reverse (Close Valve)
-    - IN1=H, IN2=H: Brake (Not used)
+    - IN1=L,   IN2=L:   Idle (de-energized)
+    - IN1=L,   IN2=PWM: Forward (Open Valve)
+    - IN1=PWM, IN2=L:   Reverse (Close Valve)
+    - IN1=H,   IN2=H:   Brake (Not used)
 
   Main Logic:
   - Uses state-change detection (edge detection) to act only
@@ -40,7 +40,11 @@
 #include "configuration.h" // for pin definitions and timing
 
 // --- Global State Variables ---
-bool isValveOpen = false;  // Current known state of the valve
+bool isValveOpen = false; // Current known state of the valve
+
+// LEDC (PWM) channels for H-bridge inputs
+static const int HBRIDGE_LEDC_CH1 = 0; // channel for HBRIDGE_IN1_PIN
+static const int HBRIDGE_LEDC_CH2 = 1; // channel for HBRIDGE_IN2_PIN
 
 /**
  * @brief De-energizes the DRV8871 by setting both inputs to LOW (Idle).
@@ -50,27 +54,28 @@ static void deenergizeValve()
   // Idle mode (IN1=L, IN2=L)
   digitalWrite(HBRIDGE_IN1_PIN, LOW);
   digitalWrite(HBRIDGE_IN2_PIN, LOW);
+  // Ensure PWM outputs are zeroed
+  ledcWrite(HBRIDGE_LEDC_CH1, 0);
+  ledcWrite(HBRIDGE_LEDC_CH2, 0);
 }
 
 /**
- * @brief Applies "Forward" voltage (IN1=H, IN2=L) to open the valve.
+ * @brief Applies "Forward" voltage (IN1=L, IN2=PWM) to open the valve.
  */
 static void openValve()
 {
-  Serial.print("Opening valve (");
-  Serial.print(timeToOpenValve);
-  Serial.println("ms)...");
+  Serial.printf("Opening valve (%lu ms)...\n", timeToOpenValve);
 
-  // Forward Voltage (IN1=L, IN2=H)
+  // Forward Voltage (IN1=L, IN2=PWM)
+  uint8_t duty = readVoltageDutyCycle();
   digitalWrite(HBRIDGE_IN1_PIN, LOW);
-  digitalWrite(HBRIDGE_IN2_PIN, HIGH);
+  ledcWrite(HBRIDGE_LEDC_CH2, duty);
 
   // Wait for travel time (non-blocking)
   unsigned long startTime = millis();
   while (millis() - startTime < timeToOpenValve)
   {
-    // Allow other processing during wait
-    yield();
+    yield(); // Allow other processing during wait
   }
 
   // Remove power (Idle)
@@ -83,20 +88,19 @@ static void openValve()
  */
 static void closeValve()
 {
-  Serial.print("Closing valve (");
-  Serial.print(timeToCloseValve);
-  Serial.println("ms)...");
+  Serial.printf("Closing valve (%lu ms)...\n", timeToCloseValve);
 
   // Reverse Voltage (IN1=H, IN2=L)
-  digitalWrite(HBRIDGE_IN1_PIN, HIGH);
+  // Read duty and apply PWM: IN2=LOW, PWM on IN1
+  uint8_t duty = readVoltageDutyCycle();
   digitalWrite(HBRIDGE_IN2_PIN, LOW);
+  ledcWrite(HBRIDGE_LEDC_CH1, duty);
 
   // Wait for travel time (non-blocking)
   unsigned long startTime = millis();
   while (millis() - startTime < timeToCloseValve)
   {
-    // Allow other processing during wait
-    yield();
+    yield(); // Allow other processing during wait
   }
 
   // Remove power (Idle)
@@ -125,11 +129,19 @@ static void closeValve()
  */
 void valveDriverBegin()
 {
+  analogSetPinAttenuation(PIN_VOLTAGE_SENSE, ADC_2_5db);
+  
   // Set pin modes
   pinMode(HBRIDGE_IN1_PIN, OUTPUT);
   pinMode(HBRIDGE_IN2_PIN, OUTPUT);
 
-  // delay(5000); // Wait for system stabilization
+  // Configure PWM channels (2 kHz, 8-bit resolution)
+  const int pwmFreq = 2000;
+  const int pwmResolution = 8; // duty 0-255
+  ledcSetup(HBRIDGE_LEDC_CH1, pwmFreq, pwmResolution);
+  ledcSetup(HBRIDGE_LEDC_CH2, pwmFreq, pwmResolution);
+  ledcAttachPin(HBRIDGE_IN1_PIN, HBRIDGE_LEDC_CH1);
+  ledcAttachPin(HBRIDGE_IN2_PIN, HBRIDGE_LEDC_CH2);
 
   // --- Initial Safe State ---
   // Ensure H-Bridge is off (Idle)
@@ -139,6 +151,36 @@ void valveDriverBegin()
   isValveOpen = false;
 
   Serial.println("Initialization complete. Watching for changes.");
+}
+
+// Read supply voltage and return PWM duty cycle (0-255)
+// Uses ADC attenuation 2.5 dB and `analogReadMilliVolts`.
+uint8_t readVoltageDutyCycle()
+{
+  const int N = 10;
+  unsigned long sum = 0;
+  for (int i = 0; i < N; ++i)
+  {
+    sum += analogReadMilliVolts(PIN_VOLTAGE_SENSE);
+    delay(10);
+  }
+  unsigned long avg_mV = sum / (unsigned long)N;
+
+  // supplyVoltage in volts = voltageDividerRatio * avg_mV (mV) / 1000
+  float supplyVoltage = (voltageDividerRatio * (float)avg_mV) / 1000.0f;
+
+  if (supplyVoltage <= 0.0f)
+  {
+    return 0;
+  }
+
+  // Duty cycle ratio (0..1) = valveVoltage / supplyVoltage
+  float ratio = valveVoltage / supplyVoltage;
+  ratio = constrain(ratio, 0.0f, 1.0f);
+
+  // Map to 0..255 PWM duty (avoid math library by using simple rounding)
+  uint8_t duty = (uint8_t)(ratio * 255.0f + 0.5f);
+  return duty;
 }
 
 /**
@@ -165,14 +207,16 @@ void valveDriverBegin()
 void valveOpenRequest(bool openValveRequest)
 {
   if (openValveRequest == isValveOpen)
-    return;  // Desired state already matches, do nothing
+    return; // Desired state already matches, do nothing
 
-  if (openValveRequest) {
+  if (openValveRequest)
+  {
     openValve();
     isValveOpen = true;
-  } else {
+  }
+  else
+  {
     closeValve();
     isValveOpen = false;
   }
 }
-

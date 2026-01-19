@@ -27,4 +27,11 @@ void valveDriverBegin();
  */
 void valveOpenRequest(bool heatCall);
 
+/**
+ * @brief Read supply voltage and return PWM duty cycle (0-255).
+ *
+ * Uses ADC attenuation 2.5 dB and `analogReadMilliVolts` on `PIN_VOLTAGE_SENSE`.
+ */
+uint8_t readVoltageDutyCycle();
+
 #endif // VALVE_DRIVER_H

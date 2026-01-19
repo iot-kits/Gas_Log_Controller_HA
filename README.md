@@ -33,3 +33,6 @@ Two GPIO pins on the ESP32-C3 provide digital signals to the H-bridge. Red and b
    A. Device external to the fireplace with the temperature sensor mounted on the board, 
    B. Device inside the fireplace with a wired external temperature sensor, 
    C. Device inside the fireplace with a battery-powered Bluetooth sensor external 
+
+
+Test new repo

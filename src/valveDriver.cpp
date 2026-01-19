@@ -129,6 +129,7 @@ static void closeValve()
  */
 void valveDriverBegin()
 {
+  // Configure ADC for voltage sensing (0 to 1.05V input range 2.5 dB attenuation)
   analogSetPinAttenuation(PIN_VOLTAGE_SENSE, ADC_2_5db);
   
   // Set pin modes

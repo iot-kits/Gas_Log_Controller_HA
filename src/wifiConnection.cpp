@@ -111,7 +111,7 @@ static void onGotIP(WiFiEvent_t event, WiFiEventInfo_t info)
 void setLED_PIN(bool state)
 {
 	ledBuiltIn = state;
-	digitalWrite(LED_PIN, ledBuiltIn);
+	digitalWrite(PIN_LED, ledBuiltIn);
 }
 
 /**
@@ -124,7 +124,7 @@ void setLED_PIN(bool state)
 void toggleLED_PIN()
 {
 	ledBuiltIn = !ledBuiltIn;		   // Invert the current state
-	digitalWrite(LED_PIN, ledBuiltIn); // Apply the new state
+	digitalWrite(PIN_LED, ledBuiltIn); // Apply the new state
 }
 
 /**
@@ -141,8 +141,8 @@ void toggleLED_PIN()
 void wifiBegin(bool waitForConnect)
 {
 	// Configure onboard LED pin
-	pinMode(LED_PIN, OUTPUT);    // Set LED_PIN as output
-	digitalWrite(LED_PIN, LOW);  // Start with LED off
+	pinMode(PIN_LED, OUTPUT);    // Set LED_PIN as output
+	digitalWrite(PIN_LED, LOW);  // Start with LED off
 
 	WiFi.mode(WIFI_STA);
 	WiFi.persistent(false);

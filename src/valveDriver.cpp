@@ -52,8 +52,8 @@ static const int HBRIDGE_LEDC_CH2 = 1; // channel for HBRIDGE_IN2_PIN
 static void deenergizeValve()
 {
   // Idle mode (IN1=L, IN2=L)
-  digitalWrite(HBRIDGE_IN1_PIN, LOW);
-  digitalWrite(HBRIDGE_IN2_PIN, LOW);
+  digitalWrite(PIN_HBRIDGE_IN1, LOW);
+  digitalWrite(PIN_HBRIDGE_IN2, LOW);
   // Ensure PWM outputs are zeroed
   ledcWrite(HBRIDGE_LEDC_CH1, 0);
   ledcWrite(HBRIDGE_LEDC_CH2, 0);
@@ -68,7 +68,7 @@ static void openValve()
 
   // Forward Voltage (IN1=L, IN2=PWM)
   uint8_t duty = readVoltageDutyCycle();
-  digitalWrite(HBRIDGE_IN1_PIN, LOW);
+  digitalWrite(PIN_HBRIDGE_IN1, LOW);
   ledcWrite(HBRIDGE_LEDC_CH2, duty);
 
   // Wait for travel time (non-blocking)
@@ -93,7 +93,7 @@ static void closeValve()
   // Reverse Voltage (IN1=H, IN2=L)
   // Read duty and apply PWM: IN2=LOW, PWM on IN1
   uint8_t duty = readVoltageDutyCycle();
-  digitalWrite(HBRIDGE_IN2_PIN, LOW);
+  digitalWrite(PIN_HBRIDGE_IN2, LOW);
   ledcWrite(HBRIDGE_LEDC_CH1, duty);
 
   // Wait for travel time (non-blocking)
@@ -130,19 +130,20 @@ static void closeValve()
 void valveDriverBegin()
 {
   // Configure ADC for voltage sensing (0 to 1.05V input range 2.5 dB attenuation)
+  pinMode(PIN_VOLTAGE_SENSE, INPUT);
   analogSetPinAttenuation(PIN_VOLTAGE_SENSE, ADC_2_5db);
-  
+
   // Set pin modes
-  pinMode(HBRIDGE_IN1_PIN, OUTPUT);
-  pinMode(HBRIDGE_IN2_PIN, OUTPUT);
+  pinMode(PIN_HBRIDGE_IN1, OUTPUT);
+  pinMode(PIN_HBRIDGE_IN2, OUTPUT);
 
   // Configure PWM channels (2 kHz, 8-bit resolution)
   const int pwmFreq = 2000;
   const int pwmResolution = 8; // duty 0-255
   ledcSetup(HBRIDGE_LEDC_CH1, pwmFreq, pwmResolution);
   ledcSetup(HBRIDGE_LEDC_CH2, pwmFreq, pwmResolution);
-  ledcAttachPin(HBRIDGE_IN1_PIN, HBRIDGE_LEDC_CH1);
-  ledcAttachPin(HBRIDGE_IN2_PIN, HBRIDGE_LEDC_CH2);
+  ledcAttachPin(PIN_HBRIDGE_IN1, HBRIDGE_LEDC_CH1);
+  ledcAttachPin(PIN_HBRIDGE_IN2, HBRIDGE_LEDC_CH2);
 
   // --- Initial Safe State ---
   // Ensure H-Bridge is off (Idle)
@@ -169,6 +170,11 @@ uint8_t readVoltageDutyCycle()
 
   // supplyVoltage in volts = voltageDividerRatio * avg_mV (mV) / 1000
   float supplyVoltage = (voltageDividerRatio * (float)avg_mV) / 1000.0f;
+  
+  Serial.printf("avg_mV: %lu mV, ", (unsigned long)avg_mV);
+
+  Serial.printf("Supply Voltage: %.2f V, ", supplyVoltage);
+
 
   if (supplyVoltage <= 0.0f)
   {
@@ -181,6 +187,7 @@ uint8_t readVoltageDutyCycle()
 
   // Map to 0..255 PWM duty (avoid math library by using simple rounding)
   uint8_t duty = (uint8_t)(ratio * 255.0f + 0.5f);
+  Serial.printf("duty: %u, ", duty);
   return duty;
 }
 

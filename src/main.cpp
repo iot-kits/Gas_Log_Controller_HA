@@ -29,7 +29,7 @@ void setup()
   // Optional: give a short time for host to attach
   delay(200);
   Serial.println("Serial is ready!");
-  Wire.begin(SDA_PIN, SCL_PIN);       // Begin I2C on pins assigned in configuration.h
+  Wire.begin(PIN_SDA, PIN_SCL);       // Begin I2C on pins assigned in configuration.h
   wifiBegin(true);                    // Initialize WiFi and wait for connection (starts mDNS + OTA)
   websocketBegin();                   // Initialize webSocket for bi-directional communication with web UI
   valveDriverBegin();                 // Initialize valve driver pins and state

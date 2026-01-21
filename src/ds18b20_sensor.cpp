@@ -16,7 +16,7 @@
 #include <OneWire.h>           // for OneWire bus communication
 
 // private module state
-static OneWire oneWire(ONE_WIRE_BUS);       // Instantiate OneWire bus on defined pin
+static OneWire oneWire(PIN_ONE_WIRE_BUS);       // Instantiate OneWire bus on defined pin
 static DallasTemperature sensors(&oneWire); // Instantiate DallasTemperature sensor object
 static DeviceAddress roomThermometer;       // Device address for the room temperature sensor
 static bool tempSensorInitSuccess = false;  // Track if sensor initialized successfully

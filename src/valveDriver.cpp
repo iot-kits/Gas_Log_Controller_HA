@@ -170,11 +170,6 @@ uint8_t readVoltageDutyCycle()
 
   // supplyVoltage in volts = voltageDividerRatio * avg_mV (mV) / 1000
   float supplyVoltage = (voltageDividerRatio * (float)avg_mV) / 1000.0f;
-  
-  Serial.printf("avg_mV: %lu mV, ", (unsigned long)avg_mV);
-
-  Serial.printf("Supply Voltage: %.2f V, ", supplyVoltage);
-
 
   if (supplyVoltage <= 0.0f)
   {
@@ -187,7 +182,9 @@ uint8_t readVoltageDutyCycle()
 
   // Map to 0..255 PWM duty (avoid math library by using simple rounding)
   uint8_t duty = (uint8_t)(ratio * 255.0f + 0.5f);
-  Serial.printf("duty: %u, ", duty);
+  Serial.printf("avg_mV: %lu mV\r\n", (unsigned long)avg_mV);
+  Serial.printf("Supply Voltage: %.2f V\r\n", supplyVoltage);
+  Serial.printf("duty: %u\r\n", duty);
   return duty;
 }
 

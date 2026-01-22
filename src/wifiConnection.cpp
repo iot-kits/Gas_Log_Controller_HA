@@ -173,6 +173,8 @@ void wifiBegin(bool waitForConnect)
 		Serial.printf("RSSI: %d dBm\n", WiFi.RSSI());
 		Serial.printf("MAC Address: %s\n", WiFi.macAddress().c_str());
 
+		delay(3000);	// AX55 needs time before allowing multicast
+		
 		// Start mDNS responder only after we have an IP to advertise
 		if (MDNS.begin(OTA_HOSTNAME)) {
 			Serial.println("mDNS responder started");

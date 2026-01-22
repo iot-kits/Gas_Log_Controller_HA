@@ -21,13 +21,10 @@ void setup()
 {
   Serial.begin(115200); // Initialize serial communication at 115200 baud
   // Wait until Serial is ready (especially important on ESP32-C3)
-  unsigned long serialStart = millis();
-  const unsigned long serialTimeout = 2000; // ms
-  while (!Serial && (millis() - serialStart) < serialTimeout) {
-    delay(10);
-  }
   // Optional: give a short time for host to attach
-  delay(200);
+  // delay(5000);
+  Serial.begin(115200);
+  delay(3000);
   Serial.println("Serial is ready!");
   Wire.begin(PIN_SDA, PIN_SCL);       // Begin I2C on pins assigned in configuration.h
   wifiBegin(true);                    // Initialize WiFi and wait for connection (starts mDNS + OTA)

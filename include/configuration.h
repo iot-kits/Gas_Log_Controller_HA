@@ -53,11 +53,11 @@ static const char *OTA_PASSWORD = "GasLog2025";		  // Password for OTA security
 // GPIO Pin Assignments
 static const int PIN_LED = 8;			// Built-in LED GPIO for ESP32-C3 SuperMini
 static const int PIN_ONE_WIRE_BUS = 6;	// 1-Wire Bus for DS18b20 temperature sensor
-static const int PIN_SDA = 3;			// I2C SDA pin
+static const int PIN_SDA = 10;			//! I2C SDA pin !
 static const int PIN_SCL = 9;			// I2C SCL pin
 static const int PIN_HBRIDGE_IN1 = 1;	// H-Bridge IN1 pin
 static const int PIN_HBRIDGE_IN2 = 0;	// H-Bridge IN2 pin
-static const int PIN_VOLTAGE_SENSE = 2; // Voltage sense pin (ADC)
+static const int PIN_VOLTAGE_SENSE = 3; // Voltage sense pin (ADC)
 
 // Update intervals & settings
 static unsigned long STATUS_CHECK_INTERVAL = 5000;		  // Check status periodically

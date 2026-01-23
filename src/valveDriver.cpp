@@ -41,22 +41,28 @@ static const int HBRIDGE_LEDC_CH2 = 1; // channel for HBRIDGE_IN2_PIN
  */
 uint8_t readVoltageDutyCycle()
 {
-  const int N = 10;      // number of samples for averaging
-  unsigned long sum = 0; // sum of mV readings
-  for (int i = 0; i < N; ++i)
+  const unsigned long N = 10UL; // number of samples for averaging
+  unsigned long sum = 0;        // sum of mV readings
+  for (unsigned long i = 0; i < N; ++i)
   {
     sum += analogReadMilliVolts(PIN_VOLTAGE_SENSE);
     delay(10);
   }
-  unsigned long avg_mV = sum / (unsigned long)N; // smoothed reading
-  float supplyVoltage = voltageDividerRatio * ((float)avg_mV) / 1000.0f);
+  unsigned long avg_mV = sum / N; // smoothed reading
 
-  // Duty cycle ratio (0..1) = valveVoltage / supplyVoltage
-  float ratio = valveVoltage / supplyVoltage;
-  ratio = constrain(ratio, 0.0f, 1.0f);
+  // Use float for the voltage calculation: sufficient precision, lower cost
+  float supplyVoltage = static_cast<float>(avg_mV) * 0.001f; // volts
+  supplyVoltage *= static_cast<float>(voltageDividerRatio);
 
-  // Map to 0..255 PWM duty (avoid math library by using simple rounding)
-  uint8_t duty = (uint8_t)(ratio * 255.0f + 0.5f);
+  // Duty cycle ratio (0..1) = valveVoltage / supplyVoltage (float precision)
+  float ratio = static_cast<float>(valveVoltage) / supplyVoltage;
+  if (ratio < 0.0f)
+    ratio = 0.0f;
+  else if (ratio > 1.0f)
+    ratio = 1.0f;
+
+  // Map to 0..255 PWM duty (rounding)
+  uint8_t duty = static_cast<uint8_t>(ratio * 255.0f + 0.5f);
   Serial.printf("avg_mV: %lu mV\n", (unsigned long)avg_mV);
   Serial.printf("Supply Voltage: %.2f V\n", supplyVoltage);
   Serial.printf("duty: %u%%\n", duty);

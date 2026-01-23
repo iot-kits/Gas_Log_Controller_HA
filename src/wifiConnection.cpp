@@ -1,53 +1,35 @@
-
 /**
  * @file wifiConnection.cpp
- * @brief Implements Wi-Fi connection and OTA update functionality for the magloop-controller project.
- *
- * This file provides functions to initialize Wi-Fi connectivity, handle built-in LED
- * status indication, and enable Arduino OTA (Over-The-Air) updates.
- * It uses the ESP32 WiFi and ArduinoOTA libraries, and relies on configuration parameters
- * defined in "configuration.h" for SSID, password, and network settings.
- *
- * Features:
- * - Wi-Fi connection with status LED feedback.
- * - DHCP IP assignment (default).
- * - Built-in LED control and toggling.
- * - Arduino OTA update support with progress and error reporting.
- *
- * Dependencies:
- * - Arduino.h
- * - WiFi.h
- * - ArduinoOTA.h
- * - configuration.h
- *
+ * @brief WiFi connection management with OTA (Over-The-Air) update support for ESP32
  * @author Karl Berger
- * @date 2025-05-20
+ * @version 2026.01.23
+ *
+ * This module provides WiFi connectivity functionality with integrated OTA update
+ * capabilities and mDNS service discovery. It handles automatic reconnection,
+ * network service initialization, and visual feedback through built-in LED.
  */
-#include "wifiConnection.h" // Wi-Fi connection header
 #include <Arduino.h>		// for PlatformIO
-#include <WiFi.h>			// for WiFi
 #include <ArduinoOTA.h>		// for OTA updates
 #include <ESPmDNS.h>		// for mDNS responder
-#include "configuration.h"	// for SSID, password, static IP
+#include <WiFi.h>			// for WiFi
+#include "configuration.h"	// for SSID, password, OTA settings
+#include "wifiConnection.h" // Wi-Fi connection header
 
 /**
- * @brief Initializes and configures Over-The-Air (OTA) update functionality.
+ * @brief Initialize and configure OTA (Over-The-Air) update service
  *
- * This function sets up the ArduinoOTA library, registering event handlers for OTA start,
- * end, progress, and error events. It enables the device to receive firmware or filesystem
- * updates wirelessly. Upon successful initialization, a message is printed to the serial console.
+ * Sets up ArduinoOTA with hostname and password authentication. Configures
+ * event handlers for start, progress, completion, and error states during
+ * OTA updates. Prints status information to serial console.
  *
- * Event handlers:
- * - onStart: Prints the type of update being started ("sketch" or "filesystem").
- * - onEnd: Prints a message when the update is complete.
- * - onProgress: Prints the update progress as a percentage.
- * - onError: Prints an error message corresponding to the OTA error encountered.
+ * @note Requires OTA_HOSTNAME and OTA_PASSWORD to be defined in configuration
+ * @see configuration.h for hostname and password definitions
  */
 void otaBegin()
-{	// Set OTA hostname and password for security
+{ // Set OTA hostname and password for security
 	ArduinoOTA.setHostname(OTA_HOSTNAME);
 	ArduinoOTA.setPassword(OTA_PASSWORD);
-		ArduinoOTA.begin();
+	ArduinoOTA.begin();
 	ArduinoOTA.onStart([]()
 					   {
     String type = (ArduinoOTA.getCommand() == U_FLASH) ? "sketch" : "filesystem";
@@ -66,83 +48,102 @@ void otaBegin()
 					   else if (error == OTA_END_ERROR) Serial.println("End Failed"); });
 	Serial.println("OTA Ready");
 	Serial.printf("OTA Hostname: %s\n", OTA_HOSTNAME);
-	// Print the actual assigned IP (may be DHCP); don't print the static
-	// `LOCAL_IP` unconditionally because that can be misleading when
-	// `USE_STATIC_IP == false` and the device is using DHCP.
 	Serial.printf("OTA IP Address: %s\n", WiFi.localIP().toString().c_str());
 } // otaBegin()
 
-//! Global variables
-static bool ledBuiltIn = LOW; // Built-in LED LOW = OFF, HIGH = ON
-// Track whether mDNS/OTA services have been started for the current
-// network interface. This prevents re-initializing services on repeated
-// GOT_IP events.
-static bool networkServicesStarted = false;
+/**
+ * @brief WiFi event handler for IP address assignment
+ *
+ * Automatically triggered when ESP32 receives an IP address from DHCP.
+ * Initializes mDNS responder and OTA services on first IP acquisition,
+ * preventing duplicate service initialization on subsequent reconnections.
+ *
+ * @param event WiFi event type (should be ARDUINO_EVENT_WIFI_STA_GOT_IP)
+ * @param info Additional event information structure
+ */
+static bool networkServicesStarted = false;  // global flag for network service state
 
-// WiFi GOT_IP event handler: start mDNS and OTA after obtaining an IP.
 static void onGotIP(WiFiEvent_t event, WiFiEventInfo_t info)
 {
 	Serial.printf("WiFi event: GOT IP %s\n", WiFi.localIP().toString().c_str());
-	if (!networkServicesStarted) {
-		if (MDNS.begin(OTA_HOSTNAME)) {
+	if (!networkServicesStarted)
+	{
+		if (MDNS.begin(OTA_HOSTNAME))
+		{
 			Serial.println("mDNS responder started (GOT_IP)");
 			MDNS.addService("http", "tcp", 80);
 			MDNS.addService("arduino-ota", "tcp", 3232);
-		} else {
+		}
+		else
+		{
 			Serial.println("mDNS responder failed to start (continuing without mDNS)");
 		}
 		otaBegin();
 		networkServicesStarted = true;
-	} else {
+	}
+	else
+	{
 		Serial.println("Network services already started; skipping init");
 	}
 }
 
 /**
- * @brief Sets the state of the built-in LED.
- *
- * This function updates the state of the built-in LED to the specified value.
- * It also updates the internal `ledBuiltIn` variable to reflect the current state.
- *
- * @param state A boolean value indicating the desired LED state:
- *              - `true` to turn the LED ON.
- *              - `false` to turn the LED OFF.
+ * @brief Callback function invoked when the WiFi connection loses its IP address.
+ * 
+ * This function is called when a WiFi disconnect event occurs. It performs cleanup
+ * operations to gracefully stop network services and prepare for a potential reconnection.
+ * 
+ * @param event The WiFi event type that triggered this callback (expected to be disconnect-related)
+ * @param info Additional information about the WiFi event
+ * 
+ * @details The function performs the following cleanup operations:
+ *          - Logs the disconnection event to Serial
+ *          - Stops mDNS service to allow clean restart on reconnection
+ *          - Sets networkServicesStarted flag to false to indicate services are stopped
+ *          - Avoids stopping ArduinoOTA due to platform portability issues
+ * 
+ * @note ArduinoOTA is not explicitly stopped here because the 'end' method is not
+ *       available on all platforms. The onGotIP callback will handle OTA restart
+ *       when the network connection is reestablished.
  */
-void setLED_PIN(bool state)
+static void onLostIP(WiFiEvent_t event, WiFiEventInfo_t info)
 {
-	ledBuiltIn = state;
-	digitalWrite(PIN_LED, ledBuiltIn);
+	Serial.println("WiFi event: DISCONNECTED; stopping network services");
+	// Stop mDNS so it can be restarted cleanly on reconnect
+	MDNS.end();
+	// Note: ArduinoOTA does not provide a portable 'end' on all platforms,
+	// so we avoid calling it here; `onGotIP` will call `otaBegin()` again
+	// when network comes back and `networkServicesStarted` is false.
+	networkServicesStarted = false;
 }
 
 /**
- * @brief Toggles the state of the built-in LED.
+ * @brief Initialize WiFi connection with optional blocking wait
  *
- * This function inverts the current state of the built-in LED. If the LED is ON,
- * it will be turned OFF, and vice versa. The internal `ledState` variable is
- * updated to reflect the new state.
- */
-void toggleLED_PIN()
-{
-	ledBuiltIn = !ledBuiltIn;		   // Invert the current state
-	digitalWrite(PIN_LED, ledBuiltIn); // Apply the new state
-}
-
-/**
- * @brief Attempts to connect to a WiFi network using predefined SSID and password.
+ * Configures WiFi in station mode with auto-reconnect enabled. Sets up
+ * built-in LED for visual connection feedback. Registers event handler
+ * for IP assignment. Optionally blocks until connection is established
+ * with LED blinking feedback.
  *
- * If the device is not already connected to WiFi, this function initiates the connection
- * process. While attempting to connect, it toggles the built-in LED and prints a dot to
- * the serial monitor every 250 milliseconds. Once connected, it turns on the built-in LED
- * and prints the assigned local IP address to the serial monitor.
+ * @param waitForConnect If true, blocks until WiFi connection is established
+ *                      If false, initiates connection asynchronously
  *
- * @note Requires WIFI_SSID and WIFI_PASSWORD to be defined.
- * @note Assumes Serial and WiFi have been initialized.
+ * Features:
+ * - Non-persistent WiFi configuration
+ * - Auto-reconnect on connection loss
+ * - LED feedback during connection process
+ * - mDNS service advertisement (HTTP and Arduino-OTA)
+ * - Connection status reporting via serial
+ *
+ * @note Requires WIFI_SSID, WIFI_PASSWORD, and PIN_LED to be defined
+ * @see configuration.h for WiFi credentials and pin definitions
  */
 void wifiBegin(bool waitForConnect)
 {
 	// Configure onboard LED pin
-	pinMode(PIN_LED, OUTPUT);    // Set LED_PIN as output
-	digitalWrite(PIN_LED, LOW);  // Start with LED off
+	static bool ledBuiltInState = LOW;		// Built-in LED LOW = OFF, HIGH = ON
+	pinMode(PIN_LED, OUTPUT);				// Set LED_PIN as output
+	digitalWrite(PIN_LED, ledBuiltInState); // Start with LED off
 
 	WiFi.mode(WIFI_STA);
 	WiFi.persistent(false);
@@ -152,51 +153,32 @@ void wifiBegin(bool waitForConnect)
 
 	// Register GOT_IP event handler so mDNS/OTA are started on reconnects
 	WiFi.onEvent(onGotIP, ARDUINO_EVENT_WIFI_STA_GOT_IP);
+	// Register disconnect handler to reset network service state
+	WiFi.onEvent(onLostIP, ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
 
 	// Start connecting (non-blocking). If caller wants to wait, perform
 	// the blocking loop below to provide LED feedback and ensure IP is
 	// assigned before proceeding.
 	WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
-	if (waitForConnect) {
+	if (waitForConnect)
+	{
 		Serial.print("Connecting to WiFi");
-		while (WiFi.status() != WL_CONNECTED) {
-			toggleLED_PIN();
+		while (WiFi.status() != WL_CONNECTED)
+		{
+			ledBuiltInState = !ledBuiltInState;		// Invert the current state
+			digitalWrite(PIN_LED, ledBuiltInState); // Apply the new state
 			delay(250);
 			yield();
 			Serial.print(".");
 		}
-		setLED_PIN(LOW); // Turn LED steady when connected
+		digitalWrite(PIN_LED, ledBuiltInState); // Turn LED steady when connected
 		Serial.println();
 		Serial.printf("Connected to WiFi SSID: %s\n", WIFI_SSID);
 		Serial.printf("Assigned IP: %s\n", WiFi.localIP().toString().c_str());
 		Serial.printf("RSSI: %d dBm\n", WiFi.RSSI());
 		Serial.printf("MAC Address: %s\n", WiFi.macAddress().c_str());
-
-		delay(3000);	// AX55 needs time before allowing multicast
-		
-		// Start mDNS responder only after we have an IP to advertise
-		if (MDNS.begin(OTA_HOSTNAME)) {
-			Serial.println("mDNS responder started");
-			MDNS.addService("http", "tcp", 80);
-			MDNS.addService("arduino-ota", "tcp", 3232);
-		} else {
-			Serial.println("mDNS responder failed to start (continuing without mDNS)");
-		}
-
-		// Start OTA now that network is up
-		otaBegin();
-		networkServicesStarted = true;
 	}
 }
 
-/**
- * @brief Initializes the WiFi connection with specific settings.
- *
- * This function configures the onboard LED as an output and turns it off.
- * It sets the WiFi mode to station (WIFI_STA), disables WiFi persistence,
- * enables automatic reconnection, and disables WiFi sleep mode.
- * It uses DHCP for IP assignment by default; any fixed-address requirements
- * should be handled by a DHCP reservation on the router.
- */
-// (removed old no-arg wifiBegin; use wifiBegin(bool) instead)
+// end of wifiConnection.cpp

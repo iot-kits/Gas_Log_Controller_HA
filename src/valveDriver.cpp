@@ -1,39 +1,24 @@
-/*
-  @file Gas Fireplace Valve Controller
-  @author Karl Berger
-  @version 2026.01.19
-
-  This code controls a gas valve that requires timed pulses of
-  positive or negative voltage to open and close.
-
-  Hardware Assumptions:
-  1. An H-Bridge (like DRV8871) is used to reverse polarity.
-     - Arduino PIN_VALVE_IN1 -> DRV8871 IN1
-     - Arduino PIN_VALVE_IN2 -> DRV8871 IN2
-     - DRV8871 OUT1 -> Valve Terminal 1
-     - DRV8871 OUT2 -> Valve Terminal 2
-     (DRV8871 VM connected to valve power supply)
-
-  2. DRV8871 Logic:
-    - IN1=L,   IN2=L:   Idle (de-energized)
-    - IN1=L,   IN2=PWM: Forward (Open Valve)
-    - IN1=PWM, IN2=L:   Reverse (Close Valve)
-    - IN1=H,   IN2=H:   Brake (Not used)
-
-  Main Logic:
-  - Uses state-change detection (edge detection) to act only
-    when the thermostat signal *changes*.
-  - When heat is called (LOW -> HIGH):
-    - Applies "Forward" voltage for `timeToOpen` milliseconds.
-    - Sets state to OPEN.
-  - When call for heat stops (HIGH -> LOW):
-    - Applies "Reverse" voltage for `timeToClose` milliseconds.
-    - Sets state to CLOSED.
-  - The valve is de-energized (Idle) after each operation.
-  - On startup, the system forces the valve closed for safety,
-    then checks the thermostat and opens the valve if needed
-    to match the initial state.
-*/
+/**
+ * @file valveDriver.cpp
+ * @version 2026.01.19
+ * @author Karl Berger
+ * @brief Valve driver implementation for Gas Log Controller
+ *
+ * Controls a gas valve using an H-bridge (DRV8871-like) that requires timed
+ * polarity/reverse pulses to open and close the valve. Uses edge-detection
+ * to perform operations only when the thermostat request changes.
+ *
+ * Hardware assumptions:
+ *  - H-bridge inputs controlled by `PIN_HBRIDGE_IN1` / `PIN_HBRIDGE_IN2`
+ *  - PWM is used on the appropriate H-bridge input to apply motor voltage
+ *
+ * Behavior:
+ *  - On rising edge (heat requested): apply forward voltage for
+ *    `timeToOpenValve` ms then de-energize (idle).
+ *  - On falling edge (heat removed): apply reverse voltage for
+ *    `timeToCloseValve` ms then de-energize (idle).
+ *  - On startup the valve is forced closed for safety.
+ */
 
 #include <Arduino.h>       // for Arduino core
 #include "valveDriver.h"   // own header
@@ -155,8 +140,15 @@ void valveDriverBegin()
   Serial.println("Initialization complete. Watching for changes.");
 }
 
-// Read supply voltage and return PWM duty cycle (0-255)
-// Uses ADC attenuation 2.5 dB and `analogReadMilliVolts`.
+/**
+ * @brief Read supply voltage and return PWM duty cycle (0-255).
+ *
+ * Uses ADC attenuation 2.5 dB and `analogReadMilliVolts()` on
+ * `PIN_VOLTAGE_SENSE`. Computes a duty value that attempts to produce
+ * `valveVoltage` at the valve given the measured supply voltage.
+ *
+ * @return uint8_t PWM duty cycle (0..255)
+ */
 uint8_t readVoltageDutyCycle()
 {
   const int N = 10;
@@ -189,26 +181,14 @@ uint8_t readVoltageDutyCycle()
 }
 
 /**
- * @brief Updates the valve state based on thermostat heat call status.
+ * @brief Updates the valve state based on a requested open/close command.
  *
- * This function monitors the thermostat heat call signal and performs edge detection
- * to control the gas valve. It only acts on state changes (rising or falling edges)
- * to avoid redundant valve operations.
+ * Acts on state changes only: opens the valve when `openValveRequest` is
+ * true and closes it when `openValveRequest` is false. No action is taken
+ * if the requested state matches the current `isValveOpen` state.
  *
- * @param heatCall Current state of the thermostat heat call (true = heating requested, false = idle)
- *
- * Behavior:
- * - Rising Edge (heat call starts): Opens the valve if currently closed and updates status
- * - Falling Edge (heat call stops): Closes the valve if currently open and updates status
- * - No Change: Takes no action
- *
- * The function maintains internal state variables (isHeatCalled, isValveOpen) to track
- * previous states and prevent duplicate operations.
- *
- * @note Requires global state variables: isHeatCalled, isValveOpen
- * @note Calls helper functions: openValve(), closeValve()
+ * @param openValveRequest true to open the valve, false to close it
  */
-
 void valveOpenRequest(bool openValveRequest)
 {
   if (openValveRequest == isValveOpen)

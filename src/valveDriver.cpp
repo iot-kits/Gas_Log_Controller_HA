@@ -1,6 +1,6 @@
 /**
  * @file valveDriver.cpp
- * @version 2026.01.19
+ * @version 2026.01.23
  * @author Karl Berger
  * @brief Valve driver implementation for Gas Log Controller
  *
@@ -41,22 +41,15 @@ static const int HBRIDGE_LEDC_CH2 = 1; // channel for HBRIDGE_IN2_PIN
  */
 uint8_t readVoltageDutyCycle()
 {
-  const int N = 10;
-  unsigned long sum = 0;
+  const int N = 10;      // number of samples for averaging
+  unsigned long sum = 0; // sum of mV readings
   for (int i = 0; i < N; ++i)
   {
     sum += analogReadMilliVolts(PIN_VOLTAGE_SENSE);
     delay(10);
   }
-  unsigned long avg_mV = sum / (unsigned long)N;
-
-  // supplyVoltage in volts = voltageDividerRatio * avg_mV (mV) / 1000
-  float supplyVoltage = (voltageDividerRatio * (float)avg_mV) / 1000.0f;
-
-  if (supplyVoltage <= 0.0f)
-  {
-    return 0;
-  }
+  unsigned long avg_mV = sum / (unsigned long)N; // smoothed reading
+  float supplyVoltage = voltageDividerRatio * ((float)avg_mV) / 1000.0f);
 
   // Duty cycle ratio (0..1) = valveVoltage / supplyVoltage
   float ratio = valveVoltage / supplyVoltage;
@@ -64,9 +57,9 @@ uint8_t readVoltageDutyCycle()
 
   // Map to 0..255 PWM duty (avoid math library by using simple rounding)
   uint8_t duty = (uint8_t)(ratio * 255.0f + 0.5f);
-  Serial.printf("avg_mV: %lu mV\r\n", (unsigned long)avg_mV);
-  Serial.printf("Supply Voltage: %.2f V\r\n", supplyVoltage);
-  Serial.printf("duty: %u\r\n", duty);
+  Serial.printf("avg_mV: %lu mV\n", (unsigned long)avg_mV);
+  Serial.printf("Supply Voltage: %.2f V\n", supplyVoltage);
+  Serial.printf("duty: %u%%\n", duty);
   return duty;
 }
 
@@ -114,7 +107,7 @@ static void closeValve()
 {
   Serial.printf("Closing valve (%lu ms)...\n", timeToCloseValve);
 
-  // Reverse Voltage (IN1=H, IN2=L)
+  // Reverse Voltage (IN1=PWM, IN2=L)
   // Read duty and apply PWM: IN2=LOW, PWM on IN1
   uint8_t duty = readVoltageDutyCycle();
   digitalWrite(PIN_HBRIDGE_IN2, LOW);

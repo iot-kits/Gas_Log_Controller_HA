@@ -4,13 +4,12 @@
  * @author Karl Berger
  * @brief Valve driver implementation for Gas Log Controller
  *
- * Controls a gas valve using an H-bridge (DRV8871-like) that requires timed
- * polarity/reverse pulses to open and close the valve. Uses edge-detection
+ * Controls a gas valve using an H-bridge (DRV8871). Uses edge-detection
  * to perform operations only when the thermostat request changes.
  *
  * Hardware assumptions:
  *  - H-bridge inputs controlled by `PIN_HBRIDGE_IN1` / `PIN_HBRIDGE_IN2`
- *  - PWM is used on the appropriate H-bridge input to apply motor voltage
+ *  - PWM is used on the appropriate H-bridge input to apply controlled voltage
  *
  * Behavior:
  *  - On rising edge (heat requested): apply forward voltage for
@@ -24,12 +23,52 @@
 #include "valveDriver.h"   // own header
 #include "configuration.h" // for pin definitions and timing
 
-// --- Global State Variables ---
+// --- Global State Variable ---
 bool isValveOpen = false; // Current known state of the valve
 
 // LEDC (PWM) channels for H-bridge inputs
 static const int HBRIDGE_LEDC_CH1 = 0; // channel for HBRIDGE_IN1_PIN
 static const int HBRIDGE_LEDC_CH2 = 1; // channel for HBRIDGE_IN2_PIN
+
+/**
+ * @brief Read supply voltage and return PWM duty cycle (0-255).
+ *
+ * Uses ADC attenuation 2.5 dB and `analogReadMilliVolts()` on
+ * `PIN_VOLTAGE_SENSE`. Computes a duty value that attempts to produce
+ * `valveVoltage` at the valve given the measured supply voltage.
+ *
+ * @return uint8_t PWM duty cycle (0..255)
+ */
+uint8_t readVoltageDutyCycle()
+{
+  const int N = 10;
+  unsigned long sum = 0;
+  for (int i = 0; i < N; ++i)
+  {
+    sum += analogReadMilliVolts(PIN_VOLTAGE_SENSE);
+    delay(10);
+  }
+  unsigned long avg_mV = sum / (unsigned long)N;
+
+  // supplyVoltage in volts = voltageDividerRatio * avg_mV (mV) / 1000
+  float supplyVoltage = (voltageDividerRatio * (float)avg_mV) / 1000.0f;
+
+  if (supplyVoltage <= 0.0f)
+  {
+    return 0;
+  }
+
+  // Duty cycle ratio (0..1) = valveVoltage / supplyVoltage
+  float ratio = valveVoltage / supplyVoltage;
+  ratio = constrain(ratio, 0.0f, 1.0f);
+
+  // Map to 0..255 PWM duty (avoid math library by using simple rounding)
+  uint8_t duty = (uint8_t)(ratio * 255.0f + 0.5f);
+  Serial.printf("avg_mV: %lu mV\r\n", (unsigned long)avg_mV);
+  Serial.printf("Supply Voltage: %.2f V\r\n", supplyVoltage);
+  Serial.printf("duty: %u\r\n", duty);
+  return duty;
+}
 
 /**
  * @brief De-energizes the DRV8871 by setting both inputs to LOW (Idle).
@@ -138,46 +177,6 @@ void valveDriverBegin()
   isValveOpen = false;
 
   Serial.println("Initialization complete. Watching for changes.");
-}
-
-/**
- * @brief Read supply voltage and return PWM duty cycle (0-255).
- *
- * Uses ADC attenuation 2.5 dB and `analogReadMilliVolts()` on
- * `PIN_VOLTAGE_SENSE`. Computes a duty value that attempts to produce
- * `valveVoltage` at the valve given the measured supply voltage.
- *
- * @return uint8_t PWM duty cycle (0..255)
- */
-uint8_t readVoltageDutyCycle()
-{
-  const int N = 10;
-  unsigned long sum = 0;
-  for (int i = 0; i < N; ++i)
-  {
-    sum += analogReadMilliVolts(PIN_VOLTAGE_SENSE);
-    delay(10);
-  }
-  unsigned long avg_mV = sum / (unsigned long)N;
-
-  // supplyVoltage in volts = voltageDividerRatio * avg_mV (mV) / 1000
-  float supplyVoltage = (voltageDividerRatio * (float)avg_mV) / 1000.0f;
-
-  if (supplyVoltage <= 0.0f)
-  {
-    return 0;
-  }
-
-  // Duty cycle ratio (0..1) = valveVoltage / supplyVoltage
-  float ratio = valveVoltage / supplyVoltage;
-  ratio = constrain(ratio, 0.0f, 1.0f);
-
-  // Map to 0..255 PWM duty (avoid math library by using simple rounding)
-  uint8_t duty = (uint8_t)(ratio * 255.0f + 0.5f);
-  Serial.printf("avg_mV: %lu mV\r\n", (unsigned long)avg_mV);
-  Serial.printf("Supply Voltage: %.2f V\r\n", supplyVoltage);
-  Serial.printf("duty: %u\r\n", duty);
-  return duty;
 }
 
 /**

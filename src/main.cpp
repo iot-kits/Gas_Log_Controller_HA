@@ -19,14 +19,10 @@ bool tempSensorAvailable = false;       // Track if sensor initialized successfu
 
 void setup()
 {
-  Serial.begin(115200); // Initialize serial communication at 115200 baud
-  // Wait until Serial is ready (especially important on ESP32-C3)
-  // Optional: give a short time for host to attach
-  // delay(5000);
   Serial.begin(115200);
+  // Give a short time for host to attach (especially important on ESP32-C3)
   delay(3000);
   Serial.println("Serial is ready!");
-  Wire.begin(PIN_SDA, PIN_SCL);       // Begin I2C on pins assigned in configuration.h
   wifiBegin(true);                    // Initialize WiFi and wait for connection (starts mDNS + OTA)
   websocketBegin();                   // Initialize webSocket for bi-directional communication with web UI
   valveDriverBegin();                 // Initialize valve driver pins and state

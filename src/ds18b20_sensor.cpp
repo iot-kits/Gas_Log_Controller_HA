@@ -9,14 +9,15 @@
  * reading, and error handling for disconnected sensors.
  */
 
-#include "webSocket.h"         // for updateWebStatus()
-#include "configuration.h"     // for TEMP_RESOLUTION
-#include "ds18b20_sensor.h"    // for DS18B20 sensor function declarations
+#include <Arduino.h>           // for Arduino core functions if needed
 #include <DallasTemperature.h> // for DallasTemperature class
 #include <OneWire.h>           // for OneWire bus communication
+#include "configuration.h"     // for TEMP_RESOLUTION and pin definitions
+#include "ds18b20_sensor.h"    // own header
+#include "webSocket.h"         // for updateWebStatus()
 
 // private module state
-static OneWire oneWire(PIN_ONE_WIRE_BUS);       // Instantiate OneWire bus on defined pin
+static OneWire oneWire(PIN_ONE_WIRE_BUS);   // Instantiate OneWire bus on defined pin
 static DallasTemperature sensors(&oneWire); // Instantiate DallasTemperature sensor object
 static DeviceAddress roomThermometer;       // Device address for the room temperature sensor
 static bool tempSensorInitSuccess = false;  // Track if sensor initialized successfully
@@ -51,7 +52,7 @@ bool initSensor()
 
     if (!sensors.getAddress(roomThermometer, 0))
     {
-        tempSensorInitSuccess = false;        
+        tempSensorInitSuccess = false;
         updateWebStatus("Sensor failed");
         return false;
     }
@@ -73,11 +74,11 @@ bool initSensor()
  * @return float Temperature in Celsius degrees, or NAN if sensor is disconnected,
  *         not initialized, or reading fails
  *
- * @note Function includes a 750ms delay to allow for temperature conversion
+ * @note Uses non-blocking conversion with polling (10 ms intervals) and a timeout of up to 1 second for temperature conversion
  * @note Prints error message to Serial and updates web status on sensor failure
  */
 float readTemperature()
-{   
+{
     if (!tempSensorInitSuccess)
     {
         updateWebStatus("Sensor failed");

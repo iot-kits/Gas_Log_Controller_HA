@@ -20,8 +20,8 @@
  */
 
 #include <Arduino.h>       // for Arduino core
-#include "valveDriver.h"   // own header
 #include "configuration.h" // for pin definitions and timing
+#include "valveDriver.h"   // own header
 
 // --- Global State Variable ---
 bool isValveOpen = false; // Current known state of the valve

@@ -20,8 +20,9 @@
  * @warning This function is not thread-safe due to the static variable. Ensure it's called from a single thread only.
  */
 #include <Arduino.h>       // for Arduino core
-#include "thermostat.h"    // own header
 #include "configuration.h" // For THERMOSTAT_HYSTERESIS
+#include "thermostat.h"    // own header
+
 
 bool thermostatHeatCall(float roomTemp, float setpoint)
 {

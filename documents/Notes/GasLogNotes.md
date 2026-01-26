@@ -2,27 +2,30 @@
 
 ## Control Logic
 
-|Power|Mode  |Action      |
-|-----|------|------------|
-|   ON|  AUTO|Temp Control|
-|  OFF|  AUTO|Gas OFF     |
-|   ON|MANUAL|Gas ON      |
-|  OFF|MANUAL|Gas OFF     |
+| Mode       | Action               | Comment                             |
+|------------|----------------------|-------------------------------------|
+| Off        | Close Valve          | System Off (no heat)                |
+| Thermostat | Temperature control: |                                     |
+|            | Troom >= Tset + Thys | Open Valve on Troom rising (heat)   |
+|            | Troom <= Tset - Thys | Close Valve on Troom falling (idle) |
+| On         | Open Valve           | Heat                                |
 
 ## Variables
 
 Let:
 
-Tr = room temperature  
-Ts = set point temperature  
-Th = thermostat hysteresis  
+Troom = room temperature  
+Tset = set point temperature  
+Thys = thermostat hysteresis  
 
-- if Tr > (Ts + Th) and gasON  
-  - set gas OFF  
+- if Troom > (Tset + Thys) and gasON  
+  - close valve  
   - set gasON false  
-- if Tr < (Ts - Th) and !gasON  
-  - set gas ON  
+- if Troom < (Tset - Thys) and !gasON  
+  - open valve  
   - set gasON true  
+  
+![Thermostat](../images/Thermostat.png)
 
 ## DS18b20 Temperature Sensor
 

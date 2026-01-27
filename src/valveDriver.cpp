@@ -77,7 +77,8 @@ uint8_t readVoltageDutyCycle()
   uint8_t duty = static_cast<uint8_t>(ratio * 255.0f + 0.5f);
   Serial.printf("avg_mV: %lu mV\n", (unsigned long)avg_mV);
   Serial.printf("Supply Voltage: %.2f V\n", supplyVoltage);
-  Serial.printf("duty: %u%%\n", duty);
+  Serial.printf("duty: %u bits (%.0f%%)\n", (unsigned int)duty, 100.0f * ratio);
+
   return duty;
 }
 
@@ -312,6 +313,7 @@ void valveOpenRequest(bool openValveRequest)
           elapsed = millis() - lastOpenedAt;
           cumulativeOpenMillis += elapsed;
           lastOpenedAt = 0;
+          Serial.printf("Accumulated open time: %lu ms (%.2f min)\n", cumulativeOpenMillis, cumulativeOpenMillis / 60000.0f);
         }
         closeValve();
         isValveOpen = false;
@@ -348,6 +350,7 @@ void valveOpenRequest(bool openValveRequest)
       unsigned long elapsed = millis() - lastOpenedAt;
       cumulativeOpenMillis += elapsed;
       lastOpenedAt = 0;
+      Serial.printf("Accumulated open time: %lu ms (%.2f min)\n", cumulativeOpenMillis, cumulativeOpenMillis / 60000.0f);
     }
     closeValve();
     isValveOpen = false;

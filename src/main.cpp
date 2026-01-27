@@ -44,6 +44,7 @@ void loop()
   }
   ArduinoOTA.handle(); // Handle OTA updates
   websocketCleanup();  // Perform web client cleanup
+  valveDriverLoop();    // Enforce safety timers and schedule
 
   // Non-blocking periodic sensor update
   if (millis() - lastTempSensorUpdate > SENSOR_UPDATE_INTERVAL)

@@ -14,6 +14,7 @@
 #include <WiFi.h>			// for WiFi
 #include "configuration.h"	// for SSID, password, OTA settings
 #include "wifiConnection.h" // Wi-Fi connection header
+#include <time.h>
 
 /**
  * @brief Initialize and configure OTA (Over-The-Air) update service
@@ -68,6 +69,10 @@ static void onGotIP(WiFiEvent_t event, WiFiEventInfo_t info)
 	Serial.printf("WiFi event: GOT IP %s\n", WiFi.localIP().toString().c_str());
 	if (!networkServicesStarted)
 	{
+		// Configure NTP time source (simple, free pool)
+		configTime(NTP_GMT_OFFSET_SEC, NTP_DAYLIGHT_OFFSET_SEC, NTP_SERVER);
+		Serial.println("NTP configured");
+
 		if (MDNS.begin(OTA_HOSTNAME))
 		{
 			Serial.println("mDNS responder started (GOT_IP)");
@@ -80,6 +85,14 @@ static void onGotIP(WiFiEvent_t event, WiFiEventInfo_t info)
 		}
 		otaBegin();
 		networkServicesStarted = true;
+
+			// Print current local time (may be 0/UNIX epoch until NTP sync completes)
+			time_t now = time(nullptr);
+			struct tm timeinfo;
+			if (localtime_r(&now, &timeinfo))
+			{
+				Serial.printf("Current local time: %02d:%02d:%02d\n", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+			}
 	}
 	else
 	{

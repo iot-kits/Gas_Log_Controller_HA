@@ -22,9 +22,21 @@
 #include <Arduino.h>       // for Arduino core
 #include "configuration.h" // for pin definitions and timing
 #include "valveDriver.h"   // own header
+#include "webSocket.h"     // for updateWebStatus()
+#include <time.h>
 
 // --- Global State Variable ---
 bool isValveOpen = false; // Current known state of the valve
+
+// Safety accumulation state
+static unsigned long cumulativeOpenMillis = 0; // total accumulated open time (ms)
+static unsigned long lastOpenedAt = 0;        // timestamp when valve last opened (ms)
+static bool timeLimitActive = false;          // true when limit exceeded and valve inhibited
+static unsigned long inhibitStartMillis = 0;  // when system entered inhibited hours
+
+// Convert minutes constant to milliseconds for checks
+static const unsigned long MAX_TOTAL_OPEN_MS = MAX_TOTAL_OPEN_MINUTES * 60UL * 1000UL;
+static const unsigned long INHIBIT_RESET_MS = INHIBIT_RESET_MINUTES * 60UL * 1000UL;
 
 // LEDC (PWM) channels for H-bridge inputs
 static const int HBRIDGE_LEDC_CH1 = 0; // channel for HBRIDGE_IN1_PIN
@@ -132,6 +144,91 @@ static void closeValve()
 }
 
 /**
+ * @brief Check whether current time is within allowed operation window.
+ *
+ * Returns true when operation is permitted (default between 10:00 and 23:00),
+ * false when the system should be inhibited (e.g., 23:00-10:00).
+ */
+static bool isOperationAllowed()
+{
+  time_t now = time(nullptr);
+  struct tm timeinfo;
+  if (!localtime_r(&now, &timeinfo))
+  {
+    // If time is not available yet, allow operation to avoid accidental lockout
+    return true;
+  }
+  int hour = timeinfo.tm_hour;
+  if (OPERATION_ALLOWED_BEGIN_HOUR <= OPERATION_ALLOWED_END_HOUR)
+  {
+    return hour >= OPERATION_ALLOWED_BEGIN_HOUR && hour < OPERATION_ALLOWED_END_HOUR;
+  }
+  else
+  {
+    // Wrapped interval (not used for default 10..23 but kept for completeness)
+    return hour >= OPERATION_ALLOWED_BEGIN_HOUR || hour < OPERATION_ALLOWED_END_HOUR;
+  }
+}
+
+/**
+ * @brief Periodic housekeeping to enforce safety timers and inhibition/reset logic.
+ *
+ * Call from the main loop frequently.
+ */
+void valveDriverLoop()
+{
+  // Track inhibition window start/stop
+  if (!isOperationAllowed())
+  {
+    if (inhibitStartMillis == 0)
+      inhibitStartMillis = millis();
+  }
+  else
+  {
+    inhibitStartMillis = 0; // reset when allowed
+  }
+
+  // If valve currently open, compute running total and enforce limit
+  unsigned long runningOpenMs = 0;
+  if (isValveOpen && lastOpenedAt != 0)
+  {
+    runningOpenMs = millis() - lastOpenedAt;
+  }
+
+  unsigned long totalNow = cumulativeOpenMillis + runningOpenMs;
+  if (!timeLimitActive && totalNow >= MAX_TOTAL_OPEN_MS)
+  {
+    // Exceeded allowed cumulative open time — close valve and inhibit
+    Serial.println("Time limit exceeded: closing valve and inhibiting further operation");
+    // If valve is open, close now and record elapsed
+    if (isValveOpen)
+    {
+      // Add running portion to cumulative total
+      cumulativeOpenMillis += runningOpenMs;
+      lastOpenedAt = 0;
+      closeValve();
+      isValveOpen = false;
+    }
+    timeLimitActive = true;
+    updateWebStatus("Time limit exceeded: Valve closed");
+  }
+
+  // If limit active, check whether we've been inhibited long enough to reset
+  if (timeLimitActive && inhibitStartMillis != 0)
+  {
+    if (millis() - inhibitStartMillis >= INHIBIT_RESET_MS)
+    {
+      // Reset counters and clear inhibition
+      Serial.println("Inhibited long enough — resetting cumulative open time and clearing time limit");
+      cumulativeOpenMillis = 0;
+      timeLimitActive = false;
+      inhibitStartMillis = 0;
+      updateWebStatus("Time limits reset after inhibition");
+    }
+  }
+}
+
+/**
  * @brief Initializes the valve driver hardware and sets it to a safe state.
  *
  * This function configures the H-Bridge control pins as outputs and ensures
@@ -175,6 +272,12 @@ void valveDriverBegin()
   closeValve(); // This function handles timing
   isValveOpen = false;
 
+  // Initialize safety tracking variables
+  cumulativeOpenMillis = 0;
+  lastOpenedAt = 0;
+  timeLimitActive = false;
+  inhibitStartMillis = 0;
+
   Serial.println("Initialization complete. Watching for changes.");
 }
 
@@ -189,16 +292,63 @@ void valveDriverBegin()
  */
 void valveOpenRequest(bool openValveRequest)
 {
+  // If requested state already matches, nothing to do
   if (openValveRequest == isValveOpen)
-    return; // Desired state already matches, do nothing
+    return;
 
+  // If attempting to open, enforce schedule and cumulative limits
   if (openValveRequest)
   {
+    if (!isOperationAllowed())
+    {
+      Serial.println("Open request blocked: outside permitted hours");
+      updateWebStatus("Operation inhibited by schedule");
+      // Ensure valve is closed if it somehow was open
+      if (isValveOpen)
+      {
+        unsigned long elapsed = 0;
+        if (lastOpenedAt != 0)
+        {
+          elapsed = millis() - lastOpenedAt;
+          cumulativeOpenMillis += elapsed;
+          lastOpenedAt = 0;
+        }
+        closeValve();
+        isValveOpen = false;
+      }
+      return;
+    }
+
+    if (timeLimitActive)
+    {
+      Serial.println("Open request blocked: time limit active");
+      updateWebStatus("Time limit active: Valve remains closed");
+      return;
+    }
+
+    // Prevent opening if we've already exceeded the limit
+    if (cumulativeOpenMillis >= MAX_TOTAL_OPEN_MS)
+    {
+      Serial.println("Open request blocked: cumulative open time exceeded");
+      updateWebStatus("Time limit exceeded: Valve closed");
+      timeLimitActive = true;
+      return;
+    }
+
+    // OK to open
     openValve();
     isValveOpen = true;
+    lastOpenedAt = millis(); // start accumulating open time
   }
   else
   {
+    // Closing request: add elapsed open time to accumulator
+    if (isValveOpen && lastOpenedAt != 0)
+    {
+      unsigned long elapsed = millis() - lastOpenedAt;
+      cumulativeOpenMillis += elapsed;
+      lastOpenedAt = 0;
+    }
     closeValve();
     isValveOpen = false;
   }

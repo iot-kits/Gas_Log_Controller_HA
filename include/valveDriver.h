@@ -29,4 +29,12 @@ void valveDriverBegin();
  */
 void valveOpenRequest(bool heatCall);
 
+/**
+ * @brief Periodic valve driver housekeeping.
+ *
+ * Call this frequently from the main loop to enforce safety timers,
+ * accumulate total open time, and perform scheduled inhibit/reset logic.
+ */
+void valveDriverLoop();
+
 #endif // VALVE_DRIVER_H

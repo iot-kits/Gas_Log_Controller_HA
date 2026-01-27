@@ -68,4 +68,20 @@ static const float voltageDividerRatio = 15.24;			  // Voltage divider ratio for
 static unsigned long timeToOpenValve = 7000;			  // Time to fully open valve in milliseconds
 static unsigned long timeToCloseValve = 7000;			  // Time to fully close valve in milliseconds
 
+// --- Safety time limits and NTP configuration ---
+// NTP settings (adjust GMT/DST offsets as appropriate for your timezone)
+static const long NTP_GMT_OFFSET_SEC = 0;		// seconds offset from UTC (default 0)
+static const int NTP_DAYLIGHT_OFFSET_SEC = 0;	// daylight saving offset in seconds (default 0)
+static const char *NTP_SERVER = "pool.ntp.org"; // NTP server to use
+
+// Operating hours: system operation is allowed from OPERATION_ALLOWED_BEGIN_HOUR
+// up to (but not including) OPERATION_ALLOWED_END_HOUR. The user requested
+// operation is NOT permitted between 23:00 and 10:00 the next day by default.
+static const int OPERATION_ALLOWED_BEGIN_HOUR = 10; // 10:00 (inclusive)
+static const int OPERATION_ALLOWED_END_HOUR = 23;	// 23:00 (exclusive)
+
+// Total valve open time limit (minutes) and inhibit/reset duration (minutes)
+static const unsigned long MAX_TOTAL_OPEN_MINUTES = 240; // 240 minutes total open time
+static const unsigned long INHIBIT_RESET_MINUTES = 60;	 // require 60 minutes inhibited to reset
+
 #endif // CONFIGURATION_H

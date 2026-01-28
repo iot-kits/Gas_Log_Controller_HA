@@ -39,6 +39,7 @@
 #include <ESPAsyncWebServer.h> // for AsyncWebServer and AsyncWebSocket
 #include <LittleFS.h>          // for index.html, styles.css, and script.js
 #include <ArduinoJson.h>       // for JSON formatting
+#include "ds18b20_sensor.h"    // for readTemperature()
 
 //! Instantiate WebSocket server on port 80
 AsyncWebServer server(80); // Create AsyncWebServer object on port 80
@@ -83,6 +84,29 @@ void broadcastControlState()
     Serial.println("Broadcasted control state: " + payload);
 }
 
+// Read the temperature sensor and broadcast a temperature JSON to all clients
+void broadcastTemperature()
+{
+    float tempC = readTemperature();
+    if (isnan(tempC))
+    {
+        return;
+    }
+
+    float tempF = tempC * 9.0 / 5.0 + 32.0;
+    controlState.roomTempF = tempF;
+
+    JsonDocument doc;
+    doc["type"] = "temperature";
+    doc["value"] = tempF;
+
+    String payload;
+    serializeJson(doc, payload);
+
+    notifyAllClients(payload);
+    Serial.println("Broadcasted temperature: " + payload);
+}
+
 // Helper function to update valve state only when changed
 void setRoomTempColor(const char *newState)
 {
@@ -121,7 +145,8 @@ data, size_t len)                                                               
                 client->text(connectionWelcome);
             }
         }
-        // Send current control state (includes latest roomTemp)
+        // Send a fresh temperature reading, then current control state
+        broadcastTemperature();
         broadcastControlState();
         break;
 

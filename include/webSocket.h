@@ -73,6 +73,7 @@ extern ControlState controlState;
 //! Web Socket event handler
 void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
 void broadcastControlState();                      //! Send current control state to all connected WebSocket clients
+void broadcastTemperature();                       //! Read sensor and send a temperature JSON to all clients
 void notifyAllClients(const String &message);      //! Notify all connected clients with a message
 void setRoomTempColor(const char *newState);       //! Update room temperature background color
 void updateWebStatus(const String &statusMessage); //! Update system status and notify clients

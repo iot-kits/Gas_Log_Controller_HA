@@ -62,7 +62,7 @@ void otaBegin()
  * @param event WiFi event type (should be ARDUINO_EVENT_WIFI_STA_GOT_IP)
  * @param info Additional event information structure
  */
-static bool networkServicesStarted = false;  // global flag for network service state
+static bool networkServicesStarted = false; // global flag for network service state
 
 static void onGotIP(WiFiEvent_t event, WiFiEventInfo_t info)
 {
@@ -86,13 +86,13 @@ static void onGotIP(WiFiEvent_t event, WiFiEventInfo_t info)
 		otaBegin();
 		networkServicesStarted = true;
 
-			// Print current local time (may be 0/UNIX epoch until NTP sync completes)
-			time_t now = time(nullptr);
-			struct tm timeinfo;
-			if (localtime_r(&now, &timeinfo))
-			{
-				Serial.printf("Current local time: %02d:%02d:%02d\n", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
-			}
+		// Print current local time (may be 0/UNIX epoch until NTP sync completes)
+		time_t now = time(nullptr);
+		struct tm timeinfo;
+		if (localtime_r(&now, &timeinfo))
+		{
+			Serial.printf("Current local time: %02d:%02d:%02d\n", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+		}
 	}
 	else
 	{
@@ -102,19 +102,19 @@ static void onGotIP(WiFiEvent_t event, WiFiEventInfo_t info)
 
 /**
  * @brief Callback function invoked when the WiFi connection loses its IP address.
- * 
+ *
  * This function is called when a WiFi disconnect event occurs. It performs cleanup
  * operations to gracefully stop network services and prepare for a potential reconnection.
- * 
+ *
  * @param event The WiFi event type that triggered this callback (expected to be disconnect-related)
  * @param info Additional information about the WiFi event
- * 
+ *
  * @details The function performs the following cleanup operations:
  *          - Logs the disconnection event to Serial
  *          - Stops mDNS service to allow clean restart on reconnection
  *          - Sets networkServicesStarted flag to false to indicate services are stopped
  *          - Avoids stopping ArduinoOTA due to platform portability issues
- * 
+ *
  * @note ArduinoOTA is not explicitly stopped here because the 'end' method is not
  *       available on all platforms. The onGotIP callback will handle OTA restart
  *       when the network connection is reestablished.

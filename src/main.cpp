@@ -39,7 +39,6 @@
 #include <Arduino.h>        // for Arduino core
 #include <ArduinoOTA.h>     // for ArduinoOTA.handle() in loop()
 #include <WiFi.h>           // for WiFi connection
-#include <Wire.h>           // I2C library
 #include <ArduinoJson.h>    // for JSON serialization
 #include "configuration.h"  // for credentials, hardware connections, and control parameters
 #include "ds18b20_sensor.h" // for DS18B20 temperature sensor functions

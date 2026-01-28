@@ -30,13 +30,9 @@ bool isValveOpen = false; // Current known state of the valve
 
 // Safety accumulation state
 static unsigned long cumulativeOpenMillis = 0; // total accumulated open time (ms)
-static unsigned long lastOpenedAt = 0;        // timestamp when valve last opened (ms)
-static bool timeLimitActive = false;          // true when limit exceeded and valve inhibited
-static unsigned long inhibitStartMillis = 0;  // when system entered inhibited hours
-
-// Convert minutes constant to milliseconds for checks
-static const unsigned long MAX_TOTAL_OPEN_MS = MAX_TOTAL_OPEN_MINUTES * 60UL * 1000UL;
-static const unsigned long INHIBIT_RESET_MS = INHIBIT_RESET_MINUTES * 60UL * 1000UL;
+static unsigned long lastOpenedAt = 0;         // timestamp when valve last opened (ms)
+static bool timeLimitActive = false;           // true when limit exceeded and valve inhibited
+static unsigned long inhibitStartMillis = 0;   // when system entered inhibited hours
 
 // LEDC (PWM) channels for H-bridge inputs
 static const int HBRIDGE_LEDC_CH1 = 0; // channel for HBRIDGE_IN1_PIN
@@ -53,33 +49,38 @@ static const int HBRIDGE_LEDC_CH2 = 1; // channel for HBRIDGE_IN2_PIN
  */
 uint8_t readVoltageDutyCycle()
 {
-  const unsigned long N = 10UL; // number of samples for averaging
-  unsigned long sum = 0;        // sum of mV readings
-  for (unsigned long i = 0; i < N; ++i)
+  unsigned long input_mV = analogReadMilliVolts(PIN_VOLTAGE_SENSE);
+
+  float supplyVoltage = (input_mV / 1000.0f) * voltageDividerRatio;
+
+  // dutyCycle (0..1) = valveVoltage / supplyVoltage (float precision)
+  float dutyCycle;
+  if (supplyVoltage <= 0.0f)
   {
-    sum += analogReadMilliVolts(PIN_VOLTAGE_SENSE);
-    delay(10);
+    // Invalid or zero supply voltage; fall back to zero duty cycle
+    dutyCycle = 0.0f;
   }
-  unsigned long avg_mV = sum / N; // smoothed reading
+  else
+  {
+    dutyCycle = static_cast<float>(valveVoltage) / supplyVoltage;
+  }
 
-  // Use float for the voltage calculation: sufficient precision, lower cost
-  float supplyVoltage = static_cast<float>(avg_mV) * 0.001f; // volts
-  supplyVoltage *= static_cast<float>(voltageDividerRatio);
-
-  // Duty cycle ratio (0..1) = valveVoltage / supplyVoltage (float precision)
-  float ratio = static_cast<float>(valveVoltage) / supplyVoltage;
-  if (ratio < 0.0f)
-    ratio = 0.0f;
-  else if (ratio > 1.0f)
-    ratio = 1.0f;
-
+  // Clamp dutyCycle to the valid range [0.0, 1.0] to avoid overflow on conversion to uint8_t
+  if (dutyCycle < 0.0f)
+  {
+    dutyCycle = 0.0f;
+  }
+  else if (dutyCycle > 1.0f)
+  {
+    dutyCycle = 1.0f;
+  }
   // Map to 0..255 PWM duty (rounding)
-  uint8_t duty = static_cast<uint8_t>(ratio * 255.0f + 0.5f);
-  Serial.printf("avg_mV: %lu mV\n", (unsigned long)avg_mV);
+  uint8_t pwmDuty = static_cast<uint8_t>(dutyCycle * 255.0f + 0.5f);
+  Serial.printf("avg_mV: %lu mV\n", (unsigned long)input_mV);
   Serial.printf("Supply Voltage: %.2f V\n", supplyVoltage);
-  Serial.printf("duty: %u bits (%.0f%%)\n", (unsigned int)duty, 100.0f * ratio);
+  Serial.printf("duty: %u bits (%.0f%%)\n", (unsigned int)pwmDuty, 100.0f * dutyCycle);
 
-  return duty;
+  return pwmDuty;
 }
 
 /**
@@ -200,7 +201,7 @@ void valveDriverLoop()
   if (!timeLimitActive && totalNow >= MAX_TOTAL_OPEN_MS)
   {
     // Exceeded allowed cumulative open time — close valve and inhibit
-    Serial.println("Time limit exceeded: closing valve and inhibiting further operation");
+    Serial.println("Time exceeded: closing valve and inhibiting further operation");
     // If valve is open, close now and record elapsed
     if (isValveOpen)
     {
@@ -211,7 +212,7 @@ void valveDriverLoop()
       isValveOpen = false;
     }
     timeLimitActive = true;
-    updateWebStatus("Time limit exceeded: Valve closed");
+    updateWebStatus("Burn time exceeded");
   }
 
   // If limit active, check whether we've been inhibited long enough to reset
@@ -224,7 +225,7 @@ void valveDriverLoop()
       cumulativeOpenMillis = 0;
       timeLimitActive = false;
       inhibitStartMillis = 0;
-      updateWebStatus("Time limits reset after inhibition");
+      updateWebStatus("Burn time reset");
     }
   }
 }

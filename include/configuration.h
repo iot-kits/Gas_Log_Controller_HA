@@ -81,7 +81,7 @@ static const int OPERATION_ALLOWED_BEGIN_HOUR = 10; // 10:00 (inclusive)
 static const int OPERATION_ALLOWED_END_HOUR = 23;	// 23:00 (exclusive)
 
 // Total valve open time limit (minutes) and inhibit/reset duration (minutes)
-static const unsigned long MAX_TOTAL_OPEN_MINUTES = 240; // 240 minutes total open time
-static const unsigned long INHIBIT_RESET_MINUTES = 60;	 // require 60 minutes inhibited to reset
+static const unsigned long MAX_TOTAL_OPEN_MS = 240 * 60UL * 1000UL; // 240 minutes total open time
+static const unsigned long INHIBIT_RESET_MS = 60 * 60UL * 1000UL;	// require 60 minutes inhibited to reset
 
 #endif // CONFIGURATION_H

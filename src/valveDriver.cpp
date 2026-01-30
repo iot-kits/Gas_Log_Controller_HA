@@ -153,23 +153,8 @@ static void closeValve()
  */
 static bool isOperationAllowed()
 {
-  time_t now = time(nullptr);
-  struct tm timeinfo;
-  if (!localtime_r(&now, &timeinfo))
-  {
-    // If time is not available yet, allow operation to avoid accidental lockout
-    return true;
-  }
-  int hour = timeinfo.tm_hour;
-  if (OPERATION_ALLOWED_BEGIN_HOUR <= OPERATION_ALLOWED_END_HOUR)
-  {
-    return hour >= OPERATION_ALLOWED_BEGIN_HOUR && hour < OPERATION_ALLOWED_END_HOUR;
-  }
-  else
-  {
-    // Wrapped interval (not used for default 10..23 but kept for completeness)
-    return hour >= OPERATION_ALLOWED_BEGIN_HOUR || hour < OPERATION_ALLOWED_END_HOUR;
-  }
+  // Temporary bypass: always allow operation
+  return true;
 }
 
 /**

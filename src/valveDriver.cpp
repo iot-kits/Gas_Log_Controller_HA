@@ -153,10 +153,9 @@ static void closeValve()
  */
 static bool isOperationAllowed()
 {
-<<<<<<< HEAD
-  // Temporary bypass: always allow operation
+// Temporary bypass: always allow operation
   return true;
-=======
+
   return true; // Temporarily disable time-based inhibition for testing
 
   time_t now = time(nullptr);
@@ -181,7 +180,7 @@ static bool isOperationAllowed()
     // Wrapped interval (not used for default 10..23 but kept for completeness)
     return hour >= OPERATION_ALLOWED_BEGIN_HOUR || hour < OPERATION_ALLOWED_END_HOUR;
   }
->>>>>>> a1cdc3a9962a7d684f948497435114d6fa13fda5
+
 }
 
 /**

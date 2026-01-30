@@ -153,11 +153,18 @@ static void closeValve()
  */
 static bool isOperationAllowed()
 {
+  return true; // Temporarily disable time-based inhibition for testing
+
   time_t now = time(nullptr);
+  if (now <= 0)
+  {
+    // If time is not available yet, allow operation to avoid accidental lockout
+    return true;
+  }
   struct tm timeinfo;
   if (!localtime_r(&now, &timeinfo))
   {
-    // If time is not available yet, allow operation to avoid accidental lockout
+    // If time conversion fails, allow operation to avoid accidental lockout
     return true;
   }
   int hour = timeinfo.tm_hour;

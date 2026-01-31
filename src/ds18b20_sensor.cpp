@@ -60,6 +60,7 @@ bool initSensor()
     tempSensorInitSuccess = true;
     updateWebStatus("Sensor OK");
     sensors.setResolution(roomThermometer, TEMP_RESOLUTION);
+    sensors.setWaitForConversion(false);
 
     return true;
 }
@@ -85,16 +86,9 @@ float readTemperature()
         return NAN;
     }
 
-    // Use non-blocking conversion with polling for optimal performance
-    sensors.setWaitForConversion(false);
+    // Request temperature conversion and wait for completion
     sensors.requestTemperatures();
-
-    // Poll for conversion completion with timeout protection
-    unsigned long startTime = millis();
-    while (!sensors.isConversionComplete() && (millis() - startTime < 1000))
-    {
-        delay(10); // Small delay to prevent excessive polling
-    }
+    delay(800); // Wait for conversion to complete (~750ms at 12-bit resolution)
 
     float tempC = sensors.getTempC(roomThermometer);
 

@@ -104,7 +104,15 @@ void loop()
     break;
 
   case MODE_THERMOSTAT:
-    if (thermostatHeatCall(tempF, controlState.setpointF))
+    if (!tempSensorAvailable)
+    {
+      // Sensor not available - disable thermostat mode for safety
+      setRoomTempColor("OFF");
+      valveOpenRequest(false);
+      updateWebStatus("Sensor failure: Thermostat mode disabled");
+      controlState.mode = MODE_OFF; // Force back to OFF mode
+    }
+    else if (thermostatHeatCall(tempF, controlState.setpointF))
     {
       setRoomTempColor("HEATING");
       valveOpenRequest(true);

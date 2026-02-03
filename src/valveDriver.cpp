@@ -209,22 +209,22 @@ void valveDriverLoop()
   }
 
   unsigned long totalNow = cumulativeOpenMillis + runningOpenMs;
-  if (!timeLimitActive && totalNow >= MAX_TOTAL_OPEN_MS)
-  {
-    // Exceeded allowed cumulative open time — close valve and inhibit
-    Serial.println("Time exceeded: closing valve and inhibiting further operation");
-    // If valve is open, close now and record elapsed
-    if (isValveOpen)
-    {
-      // Add running portion to cumulative total
-      cumulativeOpenMillis += runningOpenMs;
-      lastOpenedAt = 0;
-      closeValve();
-      isValveOpen = false;
-    }
-    timeLimitActive = true;
-    updateWebStatus("Burn time exceeded");
-  }
+  // if (!timeLimitActive && totalNow >= MAX_TOTAL_OPEN_MS)
+  // {
+  //   // Exceeded allowed cumulative open time — close valve and inhibit
+  //   Serial.println("Time exceeded: closing valve and inhibiting further operation");
+  //   // If valve is open, close now and record elapsed
+  //   if (isValveOpen)
+  //   {
+  //     // Add running portion to cumulative total
+  //     cumulativeOpenMillis += runningOpenMs;
+  //     lastOpenedAt = 0;
+  //     closeValve();
+  //     isValveOpen = false;
+  //   }
+  //   timeLimitActive = true;
+  //   updateWebStatus("Burn time exceeded");
+  // }
 
   // If limit active, check whether we've been inhibited long enough to reset
   if (timeLimitActive && inhibitStartMillis != 0)
@@ -341,13 +341,13 @@ void valveOpenRequest(bool openValveRequest)
     }
 
     // Prevent opening if we've already exceeded the limit
-    if (cumulativeOpenMillis >= MAX_TOTAL_OPEN_MS)
-    {
-      Serial.println("Open request blocked: cumulative open time exceeded");
-      updateWebStatus("Time limit exceeded: Valve closed");
-      timeLimitActive = true;
-      return;
-    }
+    // if (cumulativeOpenMillis >= MAX_TOTAL_OPEN_MS)
+    // {
+    //   Serial.println("Open request blocked: cumulative open time exceeded");
+    //   updateWebStatus("Time limit exceeded: Valve closed");
+    //   timeLimitActive = true;
+    //   return;
+    // }
 
     // OK to open
     openValve();

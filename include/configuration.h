@@ -74,11 +74,13 @@ static const long NTP_GMT_OFFSET_SEC = 0;       // seconds offset from UTC (defa
 static const int NTP_DAYLIGHT_OFFSET_SEC = 0;   // daylight saving offset in seconds (default 0)
 static const char *NTP_SERVER = "pool.ntp.org"; // NTP server to use
 
-// Operating hours: system operation is allowed from OPERATION_ALLOWED_BEGIN_HOUR
-// up to (but not including) OPERATION_ALLOWED_END_HOUR. The user requested
-// operation is NOT permitted between 23:00 and 10:00 the next day by default.
-static const int OPERATION_ALLOWED_BEGIN_HOUR = 10; // 10:00 (inclusive)
-static const int OPERATION_ALLOWED_END_HOUR = 23;   // 23:00 (exclusive)
+// Operating hours: system operation is allowed from OPERATION_ALLOWED_BEGIN_HOUR:OPERATION_ALLOWED_BEGIN_MINUTE
+// up to (but not including) OPERATION_ALLOWED_END_HOUR:OPERATION_ALLOWED_END_MINUTE. Use 24-hour clock.
+// Defaults below permit operation from 10:00 (inclusive) to 23:00 (exclusive).
+static const int OPERATION_ALLOWED_BEGIN_HOUR = 10;      // hour part (24-hour clock)
+static const int OPERATION_ALLOWED_BEGIN_MINUTE = 0;    // minute part (0-59)
+static const int OPERATION_ALLOWED_END_HOUR = 23;       // hour part (24-hour clock)
+static const int OPERATION_ALLOWED_END_MINUTE = 0;      // minute part (0-59)
 
 // Total valve open time limit (minutes) and inhibit/reset duration (minutes)
 static const unsigned long MAX_TOTAL_OPEN_MS = 240 * 60UL * 1000UL; // 240 minutes total open time

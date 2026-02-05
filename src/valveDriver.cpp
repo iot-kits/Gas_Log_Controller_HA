@@ -96,6 +96,7 @@ static void deenergizeValve()
   ledcWrite(HBRIDGE_LEDC_CH2, 0);
 }
 
+
 /**
  * @brief Applies "Forward" voltage (IN1=L, IN2=PWM) to open the valve.
  */
@@ -107,7 +108,7 @@ static void openValve()
   uint8_t duty = readVoltageDutyCycle();
   digitalWrite(PIN_HBRIDGE_IN1, LOW);
   ledcWrite(HBRIDGE_LEDC_CH2, duty);
-
+  
   // Wait for travel time (non-blocking)
   unsigned long startTime = millis();
   while (millis() - startTime < timeToOpenValve)
@@ -121,7 +122,7 @@ static void openValve()
 }
 
 /**
- * @brief Applies "Reverse" voltage (IN1=L, IN2=H) to close the valve.
+ * @brief Applies "Reverse" voltage (IN1=PWM, IN2=L) to close the valve.
  */
 static void closeValve()
 {
@@ -131,7 +132,7 @@ static void closeValve()
   // Read duty and apply PWM: IN2=LOW, PWM on IN1
   uint8_t duty = readVoltageDutyCycle();
   digitalWrite(PIN_HBRIDGE_IN2, LOW);
-  ledcWrite(HBRIDGE_LEDC_CH1, duty);
+  ledcWrite(HBRIDGE_LEDC_CH1, duty); 
 
   // Wait for travel time (non-blocking)
   unsigned long startTime = millis();
@@ -153,34 +154,33 @@ static void closeValve()
  */
 static bool isOperationAllowed()
 {
-// Temporary bypass: always allow operation
-  return true;
-
-  return true; // Temporarily disable time-based inhibition for testing
-
+  // Use hour+minute window (24-hour clock). If time not available, allow operation
   time_t now = time(nullptr);
   if (now <= 0)
   {
-    // If time is not available yet, allow operation to avoid accidental lockout
-    return true;
+    return true; // allow to avoid accidental lockout
   }
+
   struct tm timeinfo;
   if (!localtime_r(&now, &timeinfo))
   {
-    // If time conversion fails, allow operation to avoid accidental lockout
-    return true;
+    return true; // allow if conversion fails
   }
-  int hour = timeinfo.tm_hour;
-  if (OPERATION_ALLOWED_BEGIN_HOUR <= OPERATION_ALLOWED_END_HOUR)
+
+  int nowMinutes = timeinfo.tm_hour * 60 + timeinfo.tm_min;
+  int beginMinutes = OPERATION_ALLOWED_BEGIN_HOUR * 60 + OPERATION_ALLOWED_BEGIN_MINUTE;
+  int endMinutes = OPERATION_ALLOWED_END_HOUR * 60 + OPERATION_ALLOWED_END_MINUTE;
+
+  if (beginMinutes <= endMinutes)
   {
-    return hour >= OPERATION_ALLOWED_BEGIN_HOUR && hour < OPERATION_ALLOWED_END_HOUR;
+    // Non-wrapping interval (same day)
+    return nowMinutes >= beginMinutes && nowMinutes < endMinutes;
   }
   else
   {
-    // Wrapped interval (not used for default 10..23 but kept for completeness)
-    return hour >= OPERATION_ALLOWED_BEGIN_HOUR || hour < OPERATION_ALLOWED_END_HOUR;
+    // Wrapped interval across midnight
+    return nowMinutes >= beginMinutes || nowMinutes < endMinutes;
   }
-
 }
 
 /**
@@ -266,7 +266,7 @@ void valveDriverBegin()
   pinMode(PIN_VOLTAGE_SENSE, INPUT);
   analogSetPinAttenuation(PIN_VOLTAGE_SENSE, ADC_2_5db);
 
-  // Set pin modes
+  // Set h-bridge pin modes
   pinMode(PIN_HBRIDGE_IN1, OUTPUT);
   pinMode(PIN_HBRIDGE_IN2, OUTPUT);
 

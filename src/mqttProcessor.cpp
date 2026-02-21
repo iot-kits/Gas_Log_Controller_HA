@@ -1,4 +1,11 @@
 
+/**
+ * @file mqttProcessor.cpp
+ * @version 2026.02.21
+ * @author Karl Berger
+ * @brief MQTT processor implementation for Gas Log Controller ESP32
+ **/
+
 /*
  * MQTT Topic Schema
  *
@@ -11,53 +18,107 @@
  *   gaslog/set_mode          → "OFF", "THERMOSTAT", "ON"
  *   gaslog/set_setpoint      → numeric (°F)
  */
+// mqttProcessor.cpp
 
-#include <Arduino.h>
+#include "mqttProcessor.h"
+#include "configuration.h"
+#include "websocket.h"
+#include <WiFi.h>
 #include <PubSubClient.h>
 
 WiFiClient espClient;
 PubSubClient client(espClient);
 
+void mqttCallback(char *topic, byte *payload, unsigned int length); // forward declare
+void mqttReconnect();
+
 void setupMQTT()
 {
-  client.setServer(mqttServer, mqttPort);
+  client.setServer(MQTT_SERVER, MQTT_PORT);
   client.setCallback(mqttCallback);
 }
 
-// Publish Telemetry
-void publishTelemetry()
+void mqttLoop()
 {
-  mqttClient.publish("gaslog/mode", currentModeString); // OFF / THERMOSTAT / ON
-  mqttClient.publish("gaslog/valve_state", valveOpen ? "OPEN" : "CLOSED");
-
-  char tempBuf[8];
-  dtostrf(roomTempF, 1, 1, tempBuf);
-  mqttClient.publish("gaslog/temperature", tempBuf);
-
-  char spBuf[8];
-  dtostrf(setpointF, 1, 0, spBuf);
-  mqttClient.publish("gaslog/setpoint", spBuf);
+  if (!client.connected())
+  {
+    mqttReconnect();
+  }
+  client.loop();
 }
 
-// Subscribe to Commands
+void mqttReconnect()
+{
+  while (!client.connected())
+  {
+    if (client.connect("gaslog-controller"))
+    {
+      client.subscribe("gaslog/set_mode");
+      client.subscribe("gaslog/set_setpoint");
+    }
+    else
+    {
+      delay(2000);
+    }
+  }
+}
+
+// ---------------------------
+// Publish Telemetry
+// ---------------------------
+void publishTelemetry()
+{
+  // MODE
+  const char *modeStr =
+      (controlState.mode == MODE_OFF) ? "OFF" : (controlState.mode == MODE_ON)       ? "ON"
+                                            : (controlState.mode == MODE_THERMOSTAT) ? "THERMOSTAT"
+                                                                                     : "UNKNOWN";
+
+  client.publish("gaslog/mode", modeStr);
+
+  // VALVE STATE ("OFF", "IDLE", "HEATING")
+  client.publish("gaslog/valve_state", controlState.valveState.c_str());
+
+  // TEMPERATURE
+  char tempBuf[16];
+  snprintf(tempBuf, sizeof(tempBuf), "%.1f", controlState.roomTempF);
+  client.publish("gaslog/temperature", tempBuf);
+
+  // SETPOINT
+  char spBuf[16];
+  snprintf(spBuf, sizeof(spBuf), "%d", controlState.setpointF);
+  client.publish("gaslog/setpoint", spBuf);
+}
+
+// ---------------------------
+// MQTT Command Handler
+// ---------------------------
 void mqttCallback(char *topic, byte *payload, unsigned int length)
 {
   String msg;
-  for (int i = 0; i < length; i++)
+  msg.reserve(length);
+  for (unsigned int i = 0; i < length; i++)
+  {
     msg += (char)payload[i];
+  }
 
+  // MODE COMMAND
   if (strcmp(topic, "gaslog/set_mode") == 0)
   {
     if (msg == "OFF")
-      setMode(MODE_OFF);
+      controlState.mode = MODE_OFF;
     else if (msg == "ON")
-      setMode(MODE_ON);
+      controlState.mode = MODE_ON;
     else if (msg == "THERMOSTAT")
-      setMode(MODE_THERMOSTAT);
+      controlState.mode = MODE_THERMOSTAT;
+
+    // If you have a central handler:
+    // setMode(controlState.mode);
   }
 
+  // SETPOINT COMMAND
   if (strcmp(topic, "gaslog/set_setpoint") == 0)
   {
-    setpointF = msg.toInt(); // You can clamp/validate here
+    controlState.setpointF = msg.toInt();
   }
 }

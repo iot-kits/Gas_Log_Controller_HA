@@ -1,8 +1,8 @@
 /**
  * @file main.cpp
- * @brief Gas Log Controller main application for ESP32-C3
+ * @brief Gas Log Controller main application for ESP32-C3 with MQTT for Home Assistant
  * @author Karl Berger
- * @version 2026-01-28
+ * @version 2026-02-21
  *
  * This application implements a WiFi-enabled thermostat controller for gas log systems.
  * It provides web-based control interface, temperature monitoring, and safety features.
@@ -42,6 +42,7 @@
 #include <ArduinoJson.h>    // for JSON serialization
 #include "configuration.h"  // for credentials, hardware connections, and control parameters
 #include "ds18b20_sensor.h" // for DS18B20 temperature sensor functions
+#include "mqttProcessor.h"  // for MQTT communication with Home Assistant
 #include "thermostat.h"     // for thermostat logic
 #include "valveDriver.h"    // for valve control
 #include "webSocket.h"      // set up webSocket
@@ -59,6 +60,7 @@ void setup()
   wifiBegin(true);                    // Initialize WiFi and wait for connection (starts mDNS + OTA)
   websocketBegin();                   // Initialize webSocket for bi-directional communication with web UI
   valveDriverBegin();                 // Initialize valve driver pins and state
+  setupMQTT();                        // Initialize MQTT client and set callback
   tempSensorAvailable = initSensor(); // Initialize temperature sensor and check if successful
   if (!tempSensorAvailable)
   {
@@ -69,33 +71,45 @@ void setup()
 
 void loop()
 {
-  static float tempF = NAN; // Initialize to NAN to indicate no valid reading yet
+  static float tempF = NAN;
+  static unsigned long lastTelemetry = 0;
+
+  // --- Network & OTA ---
   if (WiFi.status() != WL_CONNECTED)
   {
-    WiFi.reconnect(); // rely on auto-reconnect; attempt a reconnect if disconnected
+    WiFi.reconnect();
   }
-  ArduinoOTA.handle(); // Handle OTA updates
-  websocketCleanup();  // Perform web client cleanup
-  // valveDriverLoop();   // Enforce safety timers and schedule
 
-  // Non-blocking periodic sensor update
+  ArduinoOTA.handle();
+  websocketCleanup();
+
+  // --- MQTT ---
+  mqttLoop(); // must run every iteration for reconnect + callbacks
+
+  // Publish telemetry every 5 seconds
+  unsigned long now = millis();
+  if (now - lastTelemetry > 5000)
+  {
+    publishTelemetry();
+    lastTelemetry = now;
+  }
+
+  // --- Temperature Sensor Update ---
   if (millis() - lastTempSensorUpdate > SENSOR_UPDATE_INTERVAL)
   {
-    // readTemperature() returns NAN if sensor not initialized or disconnected
     float tempC = readTemperature();
     if (!isnan(tempC))
     {
-      tempF = tempC * 9.0 / 5.0 + 32.0; // Convert Celsius to Fahrenheit
-      Serial.printf("Room Temp: %.1f °F\n", tempF);
-      // Update live room temperature in control state so new WS clients see it immediately
+      tempF = tempC * 9.0 / 5.0 + 32.0;
       controlState.roomTempF = tempF;
+      Serial.printf("Room Temp: %.1f °F\n", tempF);
       broadcastTemperature();
     }
 
-    lastTempSensorUpdate = millis(); // update timestamp
+    lastTempSensorUpdate = millis();
   }
 
-  // Handle three-state mode buttons
+  // --- Mode Logic ---
   switch (controlState.mode)
   {
   case MODE_OFF:
@@ -106,11 +120,10 @@ void loop()
   case MODE_THERMOSTAT:
     if (!tempSensorAvailable)
     {
-      // Sensor not available - disable thermostat mode for safety
       setRoomTempColor("OFF");
       valveOpenRequest(false);
       updateWebStatus("Sensor failure: Thermostat mode disabled");
-      controlState.mode = MODE_OFF; // Force back to OFF mode
+      controlState.mode = MODE_OFF;
     }
     else if (thermostatHeatCall(tempF, controlState.setpointF))
     {
@@ -130,10 +143,9 @@ void loop()
     break;
 
   default:
-    // Safety fallback - turn off if mode is invalid
     setRoomTempColor("OFF");
     valveOpenRequest(false);
     updateWebStatus("Error: Invalid mode");
     break;
   }
-} // end of loop()
+}

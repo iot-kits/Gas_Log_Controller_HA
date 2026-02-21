@@ -48,42 +48,46 @@ static const char *WIFI_PASSWORD = "0F1A2D3E4D5G6L7O8R9Y";
 
 // OTA Configuration
 static const char *OTA_HOSTNAME = "GasLogController"; // Hostname for OTA and local hostname resolution
-static const char *OTA_PASSWORD = "GasLog2025";       // Password for OTA security
+static const char *OTA_PASSWORD = "GasLog2025";		  // Password for OTA security
+
+// MQTT settings
+static const char *MQTT_SERVER = "192.168.1.10"; // Mosquitto broker IP
+static const uint16_t MQTT_PORT = 1883;
 
 // GPIO Pin Assignments
-static const int PIN_LED = 8;           // Built-in LED GPIO for ESP32-C3 SuperMini
-static const int PIN_ONE_WIRE_BUS = 6;  // 1-Wire Bus for DS18b20 temperature sensor
-static const int PIN_HBRIDGE_IN1 = 1;   // H-Bridge IN1 pin
-static const int PIN_HBRIDGE_IN2 = 0;   // H-Bridge IN2 pin
+static const int PIN_LED = 8;			// Built-in LED GPIO for ESP32-C3 SuperMini
+static const int PIN_ONE_WIRE_BUS = 6;	// 1-Wire Bus for DS18b20 temperature sensor
+static const int PIN_HBRIDGE_IN1 = 1;	// H-Bridge IN1 pin
+static const int PIN_HBRIDGE_IN2 = 0;	// H-Bridge IN2 pin
 static const int PIN_VOLTAGE_SENSE = 3; // Voltage sense pin (ADC)
 
 // Update intervals & settings
-static unsigned long STATUS_CHECK_INTERVAL = 5000;        // Check status periodically
+static unsigned long STATUS_CHECK_INTERVAL = 5000;		  // Check status periodically
 static const unsigned long SENSOR_UPDATE_INTERVAL = 5000; // Update sensor readings periocally
-static bool METRIC_UNITS = false;                         // Set to true for metric units, false for imperial
-static const int TEMP_RESOLUTION = 12;                    // DS18b20 temperature sensor resolution (9-12 bits)
-static const float THERMOSTAT_HYSTERESIS = 0.2;           // Thermostat hysteresis in Fahrenheit degrees
-static const float valveVoltage = 6.5;                    // Voltage to apply to valve motor
-static const float voltageDividerRatio = 15.24;           // Voltage divider ratio for power supply measurement
-static unsigned long timeToOpenValve = 8500;              // Time to fully open valve in milliseconds
-static unsigned long timeToCloseValve = 9000;             // Time to fully close valve in milliseconds
+static bool METRIC_UNITS = false;						  // Set to true for metric units, false for imperial
+static const int TEMP_RESOLUTION = 12;					  // DS18b20 temperature sensor resolution (9-12 bits)
+static const float THERMOSTAT_HYSTERESIS = 0.2;			  // Thermostat hysteresis in Fahrenheit degrees
+static const float valveVoltage = 6.5;					  // Voltage to apply to valve motor
+static const float voltageDividerRatio = 15.24;			  // Voltage divider ratio for power supply measurement
+static unsigned long timeToOpenValve = 8500;			  // Time to fully open valve in milliseconds
+static unsigned long timeToCloseValve = 9000;			  // Time to fully close valve in milliseconds
 
 // --- Safety time limits and NTP configuration ---
 // NTP settings (adjust GMT/DST offsets as appropriate for your timezone)
-static const long NTP_GMT_OFFSET_SEC = 0;       // seconds offset from UTC (default 0)
-static const int NTP_DAYLIGHT_OFFSET_SEC = 0;   // daylight saving offset in seconds (default 0)
+static const long NTP_GMT_OFFSET_SEC = 0;		// seconds offset from UTC (default 0)
+static const int NTP_DAYLIGHT_OFFSET_SEC = 0;	// daylight saving offset in seconds (default 0)
 static const char *NTP_SERVER = "pool.ntp.org"; // NTP server to use
 
 // Operating hours: system operation is allowed from OPERATION_ALLOWED_BEGIN_HOUR:OPERATION_ALLOWED_BEGIN_MINUTE
 // up to (but not including) OPERATION_ALLOWED_END_HOUR:OPERATION_ALLOWED_END_MINUTE. Use 24-hour clock.
 // Defaults below permit operation from 10:00 (inclusive) to 23:00 (exclusive).
-static const int OPERATION_ALLOWED_BEGIN_HOUR = 10;      // hour part (24-hour clock)
-static const int OPERATION_ALLOWED_BEGIN_MINUTE = 0;    // minute part (0-59)
-static const int OPERATION_ALLOWED_END_HOUR = 23;       // hour part (24-hour clock)
-static const int OPERATION_ALLOWED_END_MINUTE = 0;      // minute part (0-59)
+static const int OPERATION_ALLOWED_BEGIN_HOUR = 10;	 // hour part (24-hour clock)
+static const int OPERATION_ALLOWED_BEGIN_MINUTE = 0; // minute part (0-59)
+static const int OPERATION_ALLOWED_END_HOUR = 23;	 // hour part (24-hour clock)
+static const int OPERATION_ALLOWED_END_MINUTE = 0;	 // minute part (0-59)
 
 // Total valve open time limit (minutes) and inhibit/reset duration (minutes)
 static const unsigned long MAX_TOTAL_OPEN_MS = 240 * 60UL * 1000UL; // 240 minutes total open time
-static const unsigned long INHIBIT_RESET_MS = 60 * 60UL * 1000UL;   // require 60 minutes inhibited to reset
+static const unsigned long INHIBIT_RESET_MS = 60 * 60UL * 1000UL;	// require 60 minutes inhibited to reset
 
 #endif // CONFIGURATION_H

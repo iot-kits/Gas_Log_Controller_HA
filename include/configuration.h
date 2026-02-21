@@ -51,7 +51,7 @@ static const char *OTA_HOSTNAME = "GasLogController"; // Hostname for OTA and lo
 static const char *OTA_PASSWORD = "GasLog2025";		  // Password for OTA security
 
 // MQTT settings
-static const char *MQTT_SERVER = "192.168.1.10"; // Mosquitto broker IP
+static const char *MQTT_SERVER = "192.168.0.200"; // Mosquitto broker IP
 static const uint16_t MQTT_PORT = 1883;
 
 // GPIO Pin Assignments

@@ -51,10 +51,72 @@ void mqttReconnect()
 {
   while (!client.connected())
   {
-    if (client.connect("gaslog-controller"))
+    // Connect with Last Will (offline) on availability topic so Home Assistant
+    // will know when the device goes offline.
+    if (client.connect("gaslog-controller", "gaslog/availability", 0, true, "offline"))
     {
       client.subscribe("gaslog/set_mode");
       client.subscribe("gaslog/set_setpoint");
+
+      // Publish availability as retained so HA knows we're online
+      client.publish("gaslog/availability", "online", true);
+
+      // Device information object used in discovery payloads
+      String deviceInfo = "{\"identifiers\":[\"gaslog_controller\"],\"name\":\"Gas Log Controller\",\"model\":\"ESP32-C3\",\"manufacturer\":\"Custom\"}";
+
+      // Temperature sensor discovery
+      {
+        String payload = "{";
+        payload += "\"name\":\"GasLog Temperature\",";
+        payload += "\"state_topic\":\"gaslog/temperature\",";
+        payload += "\"unit_of_measurement\":\"°F\",";
+        payload += "\"device_class\":\"temperature\",";
+        payload += "\"unique_id\":\"gaslog_temperature_1\",";
+        payload += "\"device\":" + deviceInfo;
+        payload += "}";
+        client.publish("homeassistant/sensor/gaslog_temperature/config", payload.c_str(), true);
+      }
+
+      // Setpoint (number) discovery
+      {
+        String payload = "{";
+        payload += "\"name\":\"GasLog Setpoint\",";
+        payload += "\"command_topic\":\"gaslog/set_setpoint\",";
+        payload += "\"state_topic\":\"gaslog/setpoint\",";
+        payload += "\"unit_of_measurement\":\"°F\",";
+        payload += "\"min\":40,";
+        payload += "\"max\":90,";
+        payload += "\"unique_id\":\"gaslog_setpoint_1\",";
+        payload += "\"device\":" + deviceInfo;
+        payload += "}";
+        client.publish("homeassistant/number/gaslog_setpoint/config", payload.c_str(), true);
+      }
+
+      // Mode (select) discovery
+      {
+        String payload = "{";
+        payload += "\"name\":\"GasLog Mode\",";
+        payload += "\"options\":[\"OFF\",\"THERMOSTAT\",\"ON\"],";
+        payload += "\"command_topic\":\"gaslog/set_mode\",";
+        payload += "\"state_topic\":\"gaslog/mode\",";
+        payload += "\"unique_id\":\"gaslog_mode_1\",";
+        payload += "\"device\":" + deviceInfo;
+        payload += "}";
+        client.publish("homeassistant/select/gaslog_mode/config", payload.c_str(), true);
+      }
+
+      // Valve state (binary_sensor) discovery
+      {
+        String payload = "{";
+        payload += "\"name\":\"GasLog Valve\",";
+        payload += "\"state_topic\":\"gaslog/valve_state\",";
+        payload += "\"payload_on\":\"OPEN\",";
+        payload += "\"payload_off\":\"CLOSED\",";
+        payload += "\"unique_id\":\"gaslog_valve_1\",";
+        payload += "\"device\":" + deviceInfo;
+        payload += "}";
+        client.publish("homeassistant/binary_sensor/gaslog_valve/config", payload.c_str(), true);
+      }
     }
     else
     {

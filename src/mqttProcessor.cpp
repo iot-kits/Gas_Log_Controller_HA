@@ -117,6 +117,37 @@ void mqttReconnect()
         payload += "}";
         client.publish("homeassistant/binary_sensor/gaslog_valve/config", payload.c_str(), true);
       }
+      // === NEW: Climate discovery (add this last) ===
+      {
+        String payload = "{";
+        payload += "\"name\":\"Gas Log Controller\",";
+        payload += "\"unique_id\":\"gaslog_climate_1\",";
+        payload += "\"device\":" + deviceInfo + ",";   // Now safe to use here
+
+        payload += "\"current_temperature_topic\":\"gaslog/temperature\",";
+        payload += "\"current_temperature_template\":\"{{ value | float }}\",";
+
+        payload += "\"temperature_state_topic\":\"gaslog/setpoint\",";
+        payload += "\"temperature_command_topic\":\"gaslog/set_setpoint\",";
+        payload += "\"temperature_unit\":\"F\",";
+        payload += "\"min_temp\":40,";
+        payload += "\"max_temp\":90,";
+        payload += "\"temp_step\":1,";
+
+        payload += "\"mode_state_topic\":\"gaslog/mode\",";
+        payload += "\"mode_command_topic\":\"gaslog/set_mode\",";
+        payload += "\"modes\":[\"off\",\"heat\",\"on\"],";
+
+        payload += "\"action_topic\":\"gaslog/valve_state\",";
+        payload += "\"action_template\":\"{% if value == 'HEATING' %}heating{% elif value == 'IDLE' %}idle{% elif value == 'OFF' %}off{% else %}off{% endif %}\",";
+
+        payload += "\"availability_topic\":\"gaslog/availability\",";
+        payload += "\"payload_available\":\"online\",";
+        payload += "\"payload_not_available\":\"offline\"";
+
+        payload += "}";
+        client.publish("homeassistant/climate/gaslog_climate/config", payload.c_str(), true);
+      }
     }
     else
     {
